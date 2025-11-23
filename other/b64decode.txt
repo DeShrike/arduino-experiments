@@ -1,0 +1,15 @@
+#include "mbedtls/base64.h"
+
+unsigned char *input = "ABCD123";
+unsigned char output[64];
+size_t outlen;
+
+mbedtls_base64_encode(output, 64, &outlen, input, strlen(input));
+
+
+
+unsigned char *input = "QUEtQkItQ0MtREQtRUUtRkY6MDAwMA==";
+unsigned char output[64];
+size_t outlen;
+
+mbedtls_base64_decode(output, 64, &outlen, input, strlen(input));
