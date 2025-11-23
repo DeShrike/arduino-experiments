@@ -41,9 +41,9 @@ Testing a KY006 passive buzzer.
 
 ### matrix-matrixportal
 
-The 'Matrix' anuimation on the MatrixPortal S3.
+The 'Matrix' animation on the MatrixPortal S3.
 
-![The Matrix](images/matrixportal_matrix.jpg)
+![The Matrix](images/matrixportal_thematrix.jpg)
 
 ### matrix-uno-r4
 
