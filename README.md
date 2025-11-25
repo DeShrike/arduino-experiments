@@ -67,6 +67,10 @@ Example from Adafruit.
 
 ![Plasma](images/matrixportal_plasma.jpg)
 
+### plasma-matrixportal2
+
+Another 'Plasma' simulation on the MatrixPortal S3.
+
 ### rects-matrixportal
 
 Draw random rectangles on the MatrixPortal S3.
@@ -112,4 +116,8 @@ Testing a 1.8" ST7735 OLED display.
 ### tonemelody-esp32
 
 Playing melodies with a ESP32 C3 Super Mini.
+
+### matrixportal-cca
+
+Cellural Automata on the MatrixPortal C3.
 
