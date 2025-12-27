@@ -125,14 +125,14 @@ supported boards.
   r2/t5/c3/nn - Cubism, Jason Rampe
   r2/t3/c5/nn - Maps, Mirek Wojtowicz (CELLebration)
 */
-int r = 2;
-int t = 2;
+int r = 3;
+int t = 3;
 int c = 6;
 
 //global cell array decs
 int grid[64][32];
 int nextGrid[64][32];
-
+int count = 0;
 int h;
 
 int brightness = 128; //max 255
@@ -291,7 +291,13 @@ void loop(void)
     // Matrix portal "DOWN" button re-seeds grid at any time
     initGrid();
   }
-
+  
+  count++;
+  if (count % 400 == 0)
+  {
+    initGrid();
+  }
+  
   cycleIterate(); //Do CA
   displayGrid(); //Refresh screen
   delay(50); //200fps cap
