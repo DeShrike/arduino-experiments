@@ -21,7 +21,7 @@
 
   https://www.arduino.cc/en/Tutorial/BuiltInExamples/Blink
 */
-#define LED 7
+#define LED 8     // 8 is pin for the build-in LED on the ESP32-C3 SuperMini
 
 // the setup function runs once when you press reset or power the board
 void setup() {
