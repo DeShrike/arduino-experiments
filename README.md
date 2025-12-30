@@ -8,7 +8,7 @@ All work in the Arduino IDE.
 
 Arduino, Arduino Nano, Arduino UNO, ESP32, ESP32 C3 Super Mini, Adafruit, 
 MatrixPortal S3, U8G2, KY006, OV7670, Plasma, Perlin noise, Adafruit Protomatter,
-SSD1306, DHT11, 
+SSD1306, DHT11, ST7735
 
 ## Projects
 
@@ -101,6 +101,8 @@ Experiment with an SSD1306 OLED display on an ESP32 C3 Super Mini.
 
 Display images on an SSD1306 OLED display with an ESP32 C3 Super Mini.
 
+![Photos](images/ssd1306-photos-esp32.jpg)
+
 ### tempdisplay-esp32
 
 Display the temperature on an SSD1306 OLED display, using a DHT11 sensor.
@@ -111,13 +113,23 @@ Show scrolling text on a MatrixPortal S3.
 
 ### tfttest1-nano
 
-Testing a 1.8" ST7735 OLED display.
+Testing a 1.8" ST7735 TFT display.
 
-### tonemelody-esp32
+### dht11-esp32
 
-Playing melodies with a ESP32 C3 Super Mini.
+Read a DHT11 sensor with a ESP32 C3 Super Mini.
 
 ### matrixportal-cca
 
 Cellural Automata on the MatrixPortal C3.
+
+### st7735-test1-esp32 and st7735-test2-esp32
+
+Testing a 1.8" ST7735 TFT display with an ESP32-C3 SuperMini.
+
+### ssd1306-3d-esp32
+
+Simple 3D rotation cube and pyramid on a SSD1306 OLED display.
+
+![3D](images/ssd1306-3d-esp32.jpg)
 

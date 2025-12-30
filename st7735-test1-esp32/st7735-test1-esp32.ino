@@ -31,6 +31,9 @@ Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
 #define SPACING2 19
 uint8_t y = 4;
 uint8_t color = 0;
+uint8_t ledstate = LOW;
+
+#define LED_PIN  5
 
 uint16_t colors[] = {
   ST7735_WHITE, 
@@ -71,6 +74,8 @@ void setup()
   tft.initR(INITR_BLACKTAB);  // Most 1.8" AZ-Delivery displays
   tft.fillScreen(ST7735_BLACK);
   delay(1000);
+  
+  pinMode(LED_PIN, OUTPUT);
 }
 
 void loop()
@@ -82,5 +87,7 @@ void loop()
   y = draw(y);
   color = (color + 1) % COLOR_COUNT;
 
+  digitalWrite(LED_PIN, ledstate);
+  ledstate = ledstate == HIGH ? LOW : HIGH;
   delay(1000);
 }
