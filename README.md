@@ -129,7 +129,10 @@ Testing a 1.8" ST7735 TFT display with an ESP32-C3 SuperMini.
 
 ### ssd1306-3d-esp32
 
-Simple 3D rotation cube and pyramid on a SSD1306 OLED display.
+Simple 3D rotating cube and pyramid on a SSD1306 OLED display.
 
 ![3D](images/ssd1306-3d-esp32.jpg)
 
+### st7735-3d-esp32
+
+Simple 3D rotating cube on a ST7735 TFT display.
