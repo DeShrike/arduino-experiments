@@ -17,7 +17,7 @@ void setup()
 
 void loop()
 {
-// read the state of the switch/button:
+  // read the state of the switch/button:
   currentState = digitalRead(BUTTON_PIN);
   if(lastState == LOW && currentState == HIGH)
   {
