@@ -2,6 +2,7 @@
 #include <Adafruit_ST7735.h>
 #include <SPI.h>
 
+#include "box.h"
 #include "notes.h"
 
 // notes in the melody:
@@ -13,29 +14,6 @@ int melody[] = {
 int noteDurations[] = {
   4, 8, 8, 4, 4, 4, 4, 4
 };
-
-// TFT pin definitions
-#define TFT_CS   7
-#define TFT_DC   8
-#define TFT_RST  9
-
-#define SCK   4 // GPIO4
-#define MOSI  6 // GPIO6
-#define MISO -1 // MISO = not used (-1)
-
-/* https://www.otronic.nl/en/esp32-c3-wi-fi-ble.html
- * TFT      ESP32-C3-SuperMini  
- * ------   ----------------------
- * LED      3.3V
- * SCK      GPIO4 SCK
- * SDA      GPIO6 MOSI
- * AO       GPIO8 SDA
- * RESET    GPIO9 SCL
- * CS       GPIO7 SS
- * GND      GND 
- * VCC      3.3V
- * ------   ----------------------
- */
 
 Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
 
@@ -52,21 +30,14 @@ int16_t fadeAmount2 = 20;
 
 int16_t backlight_brightness;
 
-#define LED1_PIN  1
-#define LED2_PIN  0
-
-#define BUZZER_PIN 2
 bool buzzer_on = false;
 
-#define BUTTON1_PIN  10
 int lastState1 = HIGH; // the previous state from the input pin
 int currentState1;     // the current reading from the input pin
 
-#define BUTTON2_PIN  20
 int lastState2 = HIGH; // the previous state from the input pin
 int currentState2;     // the current reading from the input pin
 
-#define BACKLIGHT_PIN 5
 #define BACKLIGHT_BRIGHTNESS1 127
 #define BACKLIGHT_BRIGHTNESS2 64
 
@@ -107,20 +78,14 @@ uint8_t draw(uint8_t y)
 
 void setup()
 {
+  setup_box();
+
   SPI.begin(SCK, MISO, MOSI);  
   Serial.begin(9600);
 
   tft.initR(INITR_BLACKTAB);  // Most 1.8" AZ-Delivery displays
   tft.fillScreen(ST7735_BLACK);
   delay(1000);
-  
-  pinMode(LED1_PIN, OUTPUT);
-  pinMode(LED2_PIN, OUTPUT);
-  pinMode(BACKLIGHT_PIN, OUTPUT);
-  pinMode(BUZZER_PIN, OUTPUT);
-
-  pinMode(BUTTON1_PIN, INPUT_PULLUP);
-  pinMode(BUTTON2_PIN, INPUT_PULLUP);
 
   backlight_brightness = BACKLIGHT_BRIGHTNESS1;
   analogWrite(BACKLIGHT_PIN, backlight_brightness);

@@ -16,6 +16,8 @@
 #define MOSI  6 // GPIO6
 #define MISO -1 // MISO = not used (-1)
 
+#define BACKLIGHT_PIN 5
+
 /* https://www.otronic.nl/en/esp32-c3-wi-fi-ble.html
  * TFT      ESP32-C3-SuperMini  
  * ------   ----------------------
@@ -44,9 +46,13 @@ void setup()
 {
   SPI.begin(SCK, MISO, MOSI);  
 
+  pinMode(BACKLIGHT_PIN, OUTPUT);
+
   tft.initR(INITR_BLACKTAB);  // Most 1.8" AZ-Delivery displays
   tft.fillScreen(ST7735_BLACK);
   delay(1000);
+
+  analogWrite(BACKLIGHT_PIN, 127);
 }
 
 void setPixel(uint8_t x, uint8_t y)
