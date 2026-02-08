@@ -20,6 +20,8 @@
 #define RGBto565(r,g,b) ((((r) & 0xF8) << 8) | (((g) & 0xFC) << 3) | ((b) >> 3)) 
 #define MAP(x,in_min,in_max,out_min,out_max) \
   ((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
+//#define MAX(x,y) ((x) > (y) ? (x) : (y))
+//#define MIN(x,y) ((x) < (y) ? (x) : (x))
 
 /* https://www.otronic.nl/en/esp32-c3-wi-fi-ble.html
    TFT      ESP32-C3-SuperMini
@@ -65,6 +67,7 @@ class BlueBox
     void drawRoundedCorner(uint16_t x0, uint16_t y0, uint16_t r, uint8_t corner, uint16_t color);
     void drawLineLow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color);
     void drawLineHigh(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color);
+    void drawThickArcBase(uint16_t x, uint16_t y, uint16_t r, uint16_t lineThickness, uint16_t startAngle, uint16_t endAngle, uint16_t color);
     void markDirty(int x1, int y1, int x2, int y2);
 
   public:
@@ -104,20 +107,7 @@ class BlueBox
     void drawHLine(uint16_t x1, uint16_t x2, uint16_t y, uint16_t color);
     void drawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color);
     
-    void drawThickArc(int cx, int cy, int radius, int thickness,
-                      float startDeg, float endDeg, uint16_t color, float step = 1.0);
-    void drawFilledThickArc(int cx, int cy,
-                            int innerRadius, int outerRadius,
-                            float startDeg, float endDeg,
-                            uint16_t color, float step = 1.0);
-    void drawAntiAliasedThickArc(int cx, int cy,
-                                 int radius, int thickness,
-                                 float startDeg, float endDeg,
-                                 uint16_t color, float step = 0.5);
-    void drawFilledAntiAliasedArc(int cx, int cy,
-                                  int innerRadius, int outerRadius,
-                                  float startDeg, float endDeg,
-                                  uint16_t color, float step = 0.5);
+    void drawThickArc(uint16_t x, uint16_t y, uint16_t r, uint16_t lineThickness, uint16_t startAngle, uint16_t endAngle, uint16_t color);
 
     void scrollHorizontally(int dx);
 

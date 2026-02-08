@@ -29,13 +29,15 @@ void setup()
   menu.addItem(1, "Ball");
   menu.addItem(2, "Circles");
   menu.addItem(3, "Rectangles");
-  menu.addItem(4, "RoundRect");
+  menu.addItem(4, "RoundRects");
   menu.addItem(5, "Lines");
   menu.addItem(6, "Leds");
   menu.addItem(7, "Gradient");
   menu.addItem(8, "Lines");
   menu.addItem(9, "Annulus");
-  menu.addItem(10, "3D");
+  menu.addItem(10, "Arcs");
+  menu.addItem(11, "Text");
+  menu.addItem(12, "Counter");
   
   Serial.println("Setup Done");
 }
@@ -52,6 +54,10 @@ void loop()
         {
           menu.next();
         }
+        else if (el == Button::DoublePressed)
+        {
+          menu.prev();
+        }
         else if (el == Button::LongPressed)
         {
           mode = menu.current;
@@ -59,7 +65,6 @@ void loop()
           break;
         }
         menu.draw();
-        // bluebox.drawLine(0, 0, bluebox.width(), bluebox.height(), ST7735_WHITE);
         break;
       case 1: // Ball
         doMode1();
@@ -97,28 +102,19 @@ void loop()
         doMode9();
         if (el == Button::LongPressed) mode = 0;
         break;
+      case 10: // Arc
+        doMode10();
+        if (el == Button::LongPressed) mode = 0;
+        break;
+      case 11: // Text
+        doMode11();
+        if (el == Button::LongPressed) mode = 0;
+        break;
+      case 12: // Counter
+        doMode12();
+        if (el == Button::LongPressed) mode = 0;
+        break;
     }
-
-
-    /*
-    bluebox.fill(ST7735_BLACK);
-
-    bluebox.drawRoundedRect(30, 30, bluebox.width() - 60, bluebox.height() - 60, 15, ST7735_BLUE, true);
-    bluebox.drawRoundedRect(30, 30, bluebox.width() - 60, bluebox.height() - 60, 15, ST7735_YELLOW, false);
-
-    bluebox.fillRect(10, 10, 5, 5, ST7735_RED);
-    bluebox.fillRect(bluebox.width() - 10 - 5, 10, 5, 5, ST7735_GREEN);
-    bluebox.fillRect(bluebox.width() - 10 - 5, bluebox.height() - 10 - 5, 5, 5, ST7735_YELLOW);
-    bluebox.fillRect(10, bluebox.height() - 10 - 5, 5, 5, ST7735_BLUE);
-
-    for (int x = 0; x < 30; x += 5)
-    {
-      bluebox.drawRect(x, x, 100 - x, 100 - x, ST7735_WHITE);
-    }
-
-    if (a1) bluebox.drawText(20, 15, "ESP32", ST7735_RED, ST7735_BLACK, 2);
-    if (a2) bluebox.drawTextMulti(20, 31, "ESP32-C3\nSuperMini\nBlueBox\nCoderdojo", ST7735_YELLOW, ST7735_BLACK, 2);
-    */
 
     bluebox.flush();
 }
@@ -348,4 +344,101 @@ void doMode9()
 
     colorIndex = (colorIndex + 1) % COLOR_COUNT;
     delay(250);
+}
+
+/////////////////////////////////////////////////
+// Mode 10
+/////////////////////////////////////////////////
+
+int degrees = 5;
+
+void doMode10()
+{
+    //bluebox.fill(ST7735_BLACK);
+
+    bluebox.drawThickArc(bluebox.width() / 2 , bluebox.height() / 2,
+                           bluebox.height() / 2 - 10, 10,
+                           0, degrees,
+                           colors[colorIndex]);
+    bluebox.drawThickArc(bluebox.width() / 2 , bluebox.height() / 2,
+                           bluebox.height() / 2 - 20, 10,
+                           90, (degrees + 90),
+                           colors[(colorIndex + 1) % COLOR_COUNT]);
+    bluebox.drawThickArc(bluebox.width() / 2 , bluebox.height() / 2,
+                           bluebox.height() / 2 - 30, 10,
+                           180, (degrees + 180),
+                           colors[(colorIndex + 2) % COLOR_COUNT]);
+    bluebox.drawThickArc(bluebox.width() / 2 , bluebox.height() / 2,
+                           bluebox.height() / 2 - 40, 10,
+                           270, (degrees + 270),
+                           colors[(colorIndex + 3) % COLOR_COUNT]);
+    degrees += 5;
+    if (degrees > 360)
+    {
+      degrees = 5;
+      bluebox.fill(ST7735_BLACK);
+      colorIndex = (colorIndex + 1) % COLOR_COUNT;
+    }
+
+    delay(25);
+}
+
+/////////////////////////////////////////////////
+// Mode 11
+/////////////////////////////////////////////////
+
+void doMode11()
+{
+    int y = (bluebox.height() - (5 * 20)) / 2;
+    bluebox.drawTextCentered(y, "ESP32-C3", colors[colorIndex], ST7735_BLACK, 2);
+    colorIndex = (colorIndex + 1) % COLOR_COUNT;
+    y += 20;
+    bluebox.drawTextCentered(y, "SuperMini", colors[colorIndex], ST7735_BLACK, 2);
+    colorIndex = (colorIndex + 1) % COLOR_COUNT;
+    y += 20;
+    bluebox.drawTextCentered(y, "ST7735 TFT", colors[colorIndex], ST7735_BLACK, 2);
+    colorIndex = (colorIndex + 1) % COLOR_COUNT;
+    y += 20;
+    bluebox.drawTextCentered(y, "CoderDojo", colors[colorIndex], ST7735_BLACK, 2);
+    colorIndex = (colorIndex + 1) % COLOR_COUNT;
+    y += 20;
+    bluebox.drawTextCentered(y, "Roeselare", colors[colorIndex], ST7735_BLACK, 2);
+    colorIndex = (colorIndex + 1) % COLOR_COUNT;
+
+    delay(250);
+}
+
+/////////////////////////////////////////////////
+// Mode 12
+/////////////////////////////////////////////////
+
+uint16_t counter = 0;
+
+void doMode12()
+{
+  char temp[20];
+  uint8_t fontSize = 3;
+  uint8_t padding = 10;
+  sprintf(temp, "%d", counter);
+  int width, height;
+  bluebox.measureText(temp, fontSize, &width, &height);
+
+  uint8_t y = (bluebox.height() - height) / 2;
+  uint8_t x = (bluebox.width() - width) / 2;
+  bluebox.drawRoundedRect(x - padding - 1, y - padding, width + padding + padding + 1, height + padding + padding, 7, ST7735_BLUE, true);
+  bluebox.drawRoundedRect(x - padding - 1, y - padding, width + padding + padding + 1, height + padding + padding, 7, ST7735_WHITE, false);
+  bluebox.drawTextCentered(y, temp, ST7735_YELLOW, ST7735_BLUE, fontSize);
+
+  counter++;
+  if (counter % 100 == 0)
+  {
+    bluebox.toggleGreenLed();
+  }
+
+  if (counter % 1000 == 0)
+  {
+    bluebox.toggleRedLed();
+  }
+
+  delay(100);
 }

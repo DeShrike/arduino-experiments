@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include "BlueBox.h"
 
-#define MAX_MENU_ITEMS 10
+#define MAX_MENU_ITEMS 12
 
 #define MENU_BG     ST7735_BLACK
 #define MENU_FG     ST7735_WHITE

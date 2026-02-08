@@ -694,134 +694,121 @@ void BlueBox::drawThickCircle(uint16_t x, uint16_t y, uint16_t r, uint16_t lineT
     }
 }
 
-
-
-
-
-
-
-
-
-void BlueBox::drawThickArc(int cx, int cy,
-                           int radius, int thickness,
-                           float startDeg, float endDeg,
-                           uint16_t color, float step)
+void BlueBox::drawThickArc(uint16_t x, uint16_t y, uint16_t r, uint16_t lineThickness, uint16_t startAngle, uint16_t endAngle, uint16_t color)
 {
-  if (radius <= 0 || thickness <= 0) return;
+  startAngle = (startAngle + 90) % 360;
+  endAngle = (endAngle + 90) % 360;
 
-  for (int r = radius; r < radius + thickness; r++)
+  if (startAngle < endAngle)
   {
-    for (float deg = startDeg; deg <= endDeg; deg += step)
-    {
-      float rad = deg * PI / 180.0; // degrees → radians
-      int x = cx + round(r * cos(rad));
-      int y = cy + round(r * sin(rad));
-
-      // draw into buffer safely
-      if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT)
-      {
-        buffer[y * WIDTH + x] = color;
-        markDirty(x, y, x, y);
-      }
-    }
+    drawThickArcBase(x, y, r, lineThickness, startAngle, endAngle, color);
+  }
+  else
+  {
+    drawThickArcBase(x, y, r, lineThickness, startAngle, 360, color);
+    drawThickArcBase(x, y, r, lineThickness, 0, endAngle, color);
   }
 }
 
-void BlueBox::drawFilledThickArc(int cx, int cy,
-                                 int innerRadius, int outerRadius,
-                                 float startDeg, float endDeg,
-                                 uint16_t color, float step)
+void BlueBox::drawThickArcBase(uint16_t x, uint16_t y, uint16_t r, uint16_t lineThickness, uint16_t startAngle, uint16_t endAngle, uint16_t color)
 {
-  if (innerRadius < 0 || outerRadius <= innerRadius) return;
-
-  for (int r = innerRadius; r <= outerRadius; r++)
-  {
-    for (float deg = startDeg; deg <= endDeg; deg += step)
+    auto setPixel = [&](int16_t x, int16_t y)
     {
-      float rad = deg * PI / 180.0;
-      int x = cx + round(r * cos(rad));
-      int y = cy + round(r * sin(rad));
+        if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT)
+            buffer[y * WIDTH + x] = color;
+    };
 
-      if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT)
-      {
-        buffer[y * WIDTH + x] = color;
-        markDirty(x, y, x, y);
-      }
+    r += (lineThickness / 2);
+    uint16_t r2 = r - lineThickness;
+    int16_t deg;
+
+    deg = fast_atan2(-r, 0);
+    if ((deg >= startAngle) && (deg <= endAngle))
+    {
+        // Left Middle
+        drawHLine(x - r + 1, x - r + 1 + lineThickness, y, color);
     }
-  }
+
+    deg = fast_atan2(r2, 0);
+    if ((deg >= startAngle) && (deg <= endAngle))
+    {
+        // Right Middle
+        drawHLine(x + r2, x + r2 + lineThickness, y, color);
+    }
+
+    deg = fast_atan2(0, -r);
+    if ((deg >= startAngle) && (deg <= endAngle))
+    {
+        // Top Middle
+        drawVLine(x, y - r + 1, y - r + 1 + lineThickness, color);
+    }
+
+    deg = fast_atan2(0, r2);
+    if ((deg >= startAngle) && (deg <= endAngle))
+    {
+        // Bottom middle
+        drawVLine(x, y + r2, y + r2 + lineThickness, color);
+    }
+
+    int16_t minx = 1000, miny = 1000;
+    int16_t maxx = 0, maxy = 0;
+
+    uint32_t RR = r * r;
+    uint32_t R2R2 = r2 * r2;
+    for(int16_t yy = -r; yy < 0; yy++)
+    {
+        for (int16_t xx = -r; xx < 0; xx++)
+        {
+            uint32_t rr2 = xx * xx + yy * yy;
+            if ((rr2 <= RR) && (rr2 >= R2R2))
+            {
+                deg = fast_atan2(xx, yy);
+                if ((deg >= startAngle) && (deg <= endAngle))
+                {
+                    setPixel(x + xx, y + yy);
+                    minx = MIN(minx, x + xx);
+                    miny = MIN(miny, y + yy);
+                    maxx = MAX(maxx, x + xx);
+                    maxy = MAX(maxy, y + yy);
+                }
+
+                deg = fast_atan2(xx, -yy);
+                if ((deg >= startAngle) && (deg <= endAngle))
+                {
+                    setPixel(x + xx, y - yy);
+                    minx = MIN(minx, x + xx);
+                    miny = MIN(miny, y - yy);
+                    maxx = MAX(maxx, x + xx);
+                    maxy = MAX(maxy, y - yy);
+                }
+
+                deg = fast_atan2(-xx, yy);
+                if ((deg >= startAngle) && (deg <= endAngle))
+                {
+                    setPixel(x - xx, y + yy);
+                    minx = MIN(minx, x - xx);
+                    miny = MIN(miny, y + yy);
+                    maxx = MAX(maxx, x - xx);
+                    maxy = MAX(maxy, y + yy);
+                }
+
+                deg = fast_atan2(-xx, -yy);
+                if ((deg >= startAngle) && (deg <= endAngle))
+                {
+                    setPixel(x - xx, y - yy);
+                    minx = MIN(minx, x - xx);
+                    miny = MIN(miny, y - yy);
+                    maxx = MAX(maxx, x - xx);
+                    maxy = MAX(maxy, y - yy);
+                }
+            }
+        }
+    }
+
+    markDirty(minx, miny, maxx, maxy);
 }
 
-void BlueBox::drawAntiAliasedThickArc(int cx, int cy,
-                                      int radius, int thickness,
-                                      float startDeg, float endDeg,
-                                      uint16_t color, float step)
-{
-  for (float deg = startDeg; deg <= endDeg; deg += step)
-  {
-    float rad = deg * PI / 180.0;
-    float cosA = cos(rad);
-    float sinA = sin(rad);
 
-    for (float r = radius; r < radius + thickness; r += 0.5)
-    {
-      float fx = cx + r * cosA;
-      float fy = cy + r * sinA;
-
-      int x = floor(fx);
-      int y = floor(fy);
-      float dx = fx - x;
-      float dy = fy - y;
-
-      // Compute alpha as distance from center of pixel
-      float d = sqrt(dx * dx + dy * dy);
-      float alpha = 1.0 - min(d, 1.0f); // simple anti-alias factor
-
-      if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT)
-      {
-        buffer[y * WIDTH + x] = blendColor(buffer[y * WIDTH + x], color, alpha);
-        markDirty(x, y, x, y);
-      }
-    }
-  }
-}
-
-
-void BlueBox::drawFilledAntiAliasedArc(int cx, int cy,
-                                       int innerRadius, int outerRadius,
-                                       float startDeg, float endDeg,
-                                       uint16_t color, float step)
-{
-  if (innerRadius < 0 || outerRadius <= innerRadius) return;
-
-  for (float deg = startDeg; deg <= endDeg; deg += step)
-  {
-    float rad = deg * PI / 180.0;
-    float cosA = cos(rad);
-    float sinA = sin(rad);
-
-    // Fill from inner to outer radius
-    for (float r = innerRadius; r <= outerRadius; r += 0.5)
-    {
-      float fx = cx + r * cosA;
-      float fy = cy + r * sinA;
-
-      int x = floor(fx);
-      int y = floor(fy);
-      float dx = fx - x;
-      float dy = fy - y;
-
-      // Anti-alias factor based on distance to pixel center
-      float d = sqrt(dx * dx + dy * dy);
-      float alpha = 1.0 - min(d, 1.0f);
-
-      if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT)
-      {
-        buffer[y * WIDTH + x] = blendColor(buffer[y * WIDTH + x], color, alpha);
-        markDirty(x, y, x, y);
-      }
-    }
-  }
-}
 
 // BUTTONS
 void BlueBox::beginInput()

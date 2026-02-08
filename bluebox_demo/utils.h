@@ -18,4 +18,6 @@ uint16_t avg_rgb565(uint16_t c1, uint16_t c2);
 // alpha: 0..31
 static inline uint16_t blend_rgb565_a5(uint16_t c1, uint16_t c2, uint8_t alpha);
 
+uint16_t fast_atan2(int16_t x, int16_t y);
+
 #endif
