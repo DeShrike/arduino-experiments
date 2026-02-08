@@ -1,5 +1,7 @@
 # BlueBox
 
+![BlueBox](assets/bluebox1.jpg)
+
 ## Features
 
 - ESP32-C3 SuperMini
@@ -16,8 +18,8 @@
 - TFT Backlight = 5
 - SCK = 4
 - MOSI = 6
-- Button 1 = 20 / Pull-Up / Active Low
-- Button 2 = 10 / Pull-Up / Active Low
+- Button 1 = 20 / Pull-up / Active low
+- Button 2 = 10 / Pull-up / Active low
 - Green Led = 1
 - Red Led = 0
 - Buzzer = 2
@@ -40,7 +42,7 @@ A simple full screen menu.
 
 Several utility functions.
 
-Usage: 
+## Usage
 
 ```c++
 #include "BlueBox.h"
@@ -77,10 +79,10 @@ Led and backlight pins are PWM enabled.
 
 ## Graphics routines
 
-- Text drawing, standard font only.
-- Rectangles, outlined and filled.
-- Cirlces, outlined and filled.
-- Rounded rectangles, outlines and filled.
+- Text, standard font only
+- Rectangles, outlined and filled
+- Circles, outlined and filled
+- Rounded rectangles, outlined and filled
 - Lines
 - Pixels
 - Arcs
@@ -90,9 +92,31 @@ Led and backlight pins are PWM enabled.
 
 - Support for color bitmaps
 - Support for buzzer
+- Support for custom fonts
+- More demos: color blending, sprites, bitmaps, scrolling
 
 ## Dependencies
 
 - Adafruit_GFX
 - Adafruit_ST7735
+
+## Images
+
+![BlueBox](assets/bluebox2.jpg)
+
+![BlueBox](assets/bluebox3.jpg)
+
+![BlueBox](assets/bluebox4.jpg)
+
+![BlueBox](assets/bluebox5.jpg)
+
+![BlueBox](assets/bluebox6.jpg)
+
+![BlueBox](assets/bluebox7.jpg)
+
+![BlueBox](assets/bluebox8.jpg)
+
+![BlueBox](assets/bluebox9.jpg)
+
+![BlueBox](assets/bluebox10.jpg)
 
