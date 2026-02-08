@@ -34,7 +34,7 @@ void setup()
   menu.addItem(6, "Leds");
   menu.addItem(7, "Gradient");
   menu.addItem(8, "Lines");
-  menu.addItem(9, "Arcs");
+  menu.addItem(9, "Annulus");
   menu.addItem(10, "3D");
   
   Serial.println("Setup Done");
@@ -91,6 +91,10 @@ void loop()
         break;
       case 8: // Lines
         doMode8();
+        if (el == Button::LongPressed) mode = 0;
+        break;
+      case 9: // Annulus
+        doMode9();
         if (el == Button::LongPressed) mode = 0;
         break;
     }
@@ -318,4 +322,30 @@ void doMode8()
 
     colorIndex = (colorIndex + 1) % COLOR_COUNT;
     delay(25);
+}
+
+/////////////////////////////////////////////////
+// Mode 9
+/////////////////////////////////////////////////
+
+void doMode9()
+{
+    uint16_t x1 = esp_random() % (bluebox.width());
+    uint16_t y1 = esp_random() % (bluebox.height());
+    uint16_t x2 = esp_random() % (bluebox.width());
+    uint16_t y2 = esp_random() % (bluebox.height());
+
+    if (colorIndex % 5 == 0)
+      bluebox.drawThickCircle(bluebox.width() / 2 , bluebox.height() / 2 , bluebox.height() / 2 - 10, 5, colors[colorIndex]);
+    else if (colorIndex % 5 == 1)
+      bluebox.drawThickCircle(bluebox.width() / 2 , bluebox.height() / 2 , bluebox.height() / 2 - 20, 5, colors[colorIndex]);
+    else if (colorIndex % 5 == 2)
+      bluebox.drawThickCircle(bluebox.width() / 2 , bluebox.height() / 2 , bluebox.height() / 2 - 30, 5, colors[colorIndex]);
+    else if (colorIndex % 5 == 3)
+      bluebox.drawThickCircle(bluebox.width() / 2 , bluebox.height() / 2 , bluebox.height() / 2 - 40, 5, colors[colorIndex]);
+    else
+      bluebox.drawThickCircle(bluebox.width() / 2 , bluebox.height() / 2 , bluebox.height() / 2 - 50, 5, colors[colorIndex]);
+
+    colorIndex = (colorIndex + 1) % COLOR_COUNT;
+    delay(250);
 }

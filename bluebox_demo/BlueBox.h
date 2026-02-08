@@ -96,7 +96,9 @@ class BlueBox
     void drawTextCentered(int y, const char* text, uint16_t fgcolor, uint16_t bgcolor, uint8_t fontSize);
 
     void drawSprite(int x, int y, const uint8_t* sprite, int w, int h, uint16_t color);
+
     void drawCircle(uint16_t x0, uint16_t y0, uint16_t r, uint16_t color, bool filled);
+    void drawThickCircle(uint16_t x, uint16_t y, uint16_t r, uint16_t lineThickness, uint16_t color);
 
     void drawVLine(uint16_t x, uint16_t y1, uint16_t y2, uint16_t color);
     void drawHLine(uint16_t x1, uint16_t x2, uint16_t y, uint16_t color);

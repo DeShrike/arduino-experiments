@@ -601,6 +601,98 @@ void BlueBox::drawRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint1
     drawVLine(x2, y1, y2, color);
 }
 
+void BlueBox::drawThickCircle(uint16_t x, uint16_t y, uint16_t r, uint16_t lineThickness, uint16_t color)
+{
+    // https://github.com/lvgl/lvgl/issues/252
+    r += (lineThickness / 2);
+    uint16_t r2 = r - lineThickness;
+
+    uint16_t xo[256];
+    uint16_t xi[256];
+
+    int32_t   D;    // Decision Variable
+    uint32_t  CurX; // Current X Value
+    uint32_t  CurY; // Current Y Value
+
+    D = 3 - (r << 1);
+    CurX = 0;
+    CurY = r;
+
+    int iterations = 0;
+
+    // Calculate outer circle
+    while (CurX <= CurY)
+    {
+        xo[CurX] = CurY;
+        xo[CurY] = CurX;
+        if (iterations < CurX)
+        {
+            iterations = CurX;
+        }
+        
+        if (iterations < CurY)
+        {
+            iterations = CurY;
+        }
+        
+        xi[CurX * 2] = 0;
+        xi[CurY * 2] = 0;
+        xi[CurX * 2 + 1] = 0;
+        xi[CurY * 2 + 1] = 0;
+
+        if (D < 0)
+        {
+            D += (CurX << 2) + 6;
+        }
+        else
+        {
+            D += ((CurX - CurY) << 2) + 10;
+            CurY--;
+        }
+        
+        CurX++;
+    }
+
+    D = 3 - (r2 << 1);
+    CurX = 0;
+    CurY = r2;
+
+    // Calculate inner circle
+    while (CurX <= CurY)
+    {
+        xi[CurX] = CurY;
+        xi[CurY] = CurX;
+
+        if (D < 0)
+        {
+            D += (CurX << 2) + 6;
+        }
+        else
+        {
+            D += ((CurX - CurY) << 2) + 10;
+            CurY--;
+        }
+        
+        CurX++;
+    }
+
+    // Draw horizontal lines
+    for (int yy = 0; yy <= iterations; yy++)
+    {
+        if (xi[yy] != 0)
+        {
+            drawHLine(x + xi[yy], x + xo[yy], y - yy, color);
+            drawHLine(x - xo[yy], x - xi[yy], y - yy, color);
+            drawHLine(x + xi[yy], x + xo[yy], y + yy, color);
+            drawHLine(x - xo[yy], x - xi[yy], y + yy, color);
+        }
+        else
+        {
+            drawHLine(x - xo[yy], x + xo[yy], y - yy, color);
+            drawHLine(x - xo[yy], x + xo[yy], y + yy, color);
+        }
+    }
+}
 
 
 
