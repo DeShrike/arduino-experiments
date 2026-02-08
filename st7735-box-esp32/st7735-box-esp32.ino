@@ -28,7 +28,7 @@ int16_t fadeAmount1 = 10;
 int16_t brightness2 = 0;
 int16_t fadeAmount2 = 20;
 
-int16_t backlight_brightness;
+int8_t backlight_brightness_ix;
 
 bool buzzer_on = false;
 
@@ -38,8 +38,12 @@ int currentState1;     // the current reading from the input pin
 int lastState2 = HIGH; // the previous state from the input pin
 int currentState2;     // the current reading from the input pin
 
+#define BACKLIGHT_BRIGHTNESS0 64
 #define BACKLIGHT_BRIGHTNESS1 127
-#define BACKLIGHT_BRIGHTNESS2 64
+#define BACKLIGHT_BRIGHTNESS2 250
+
+int16_t brighnesses[] = { BACKLIGHT_BRIGHTNESS0, BACKLIGHT_BRIGHTNESS1, BACKLIGHT_BRIGHTNESS2 };
+#define BRIGHTNESS_COUNT (sizeof(brighnesses) / sizeof(brighnesses[0]))
 
 uint16_t counter;
 #define DELAY 50
@@ -87,8 +91,8 @@ void setup()
   tft.fillScreen(ST7735_BLACK);
   delay(1000);
 
-  backlight_brightness = BACKLIGHT_BRIGHTNESS1;
-  analogWrite(BACKLIGHT_PIN, backlight_brightness);
+  backlight_brightness_ix = 0;
+  analogWrite(BACKLIGHT_PIN, brighnesses[backlight_brightness_ix]);
 }
 
 void doScreen()
@@ -162,8 +166,8 @@ void doButtons()
   {
     Serial.println("BUTTON1 state changed from LOW to HIGH");
 
-    backlight_brightness = backlight_brightness == BACKLIGHT_BRIGHTNESS1 ? BACKLIGHT_BRIGHTNESS2 : BACKLIGHT_BRIGHTNESS1;
-    analogWrite(BACKLIGHT_PIN, backlight_brightness);
+    backlight_brightness_ix = (backlight_brightness_ix + 1) % BRIGHTNESS_COUNT;
+    analogWrite(BACKLIGHT_PIN, brighnesses[backlight_brightness_ix]);
 
     delay(100);
   }

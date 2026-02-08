@@ -1,0 +1,215 @@
+#pragma once
+#include <Arduino.h>
+#include <functional>
+
+class ButtonISR {
+public:
+    ButtonISR(uint8_t pin, bool activeLow = true);
+
+    void begin();
+    void update();   // call from loop()
+
+    // callbacks
+    void onPress(std::function<void()> cb);
+    void onDoublePress(std::function<void()> cb);
+    void onLongPress(std::function<void()> cb);
+    void onHoldRepeat(std::function<void()> cb);
+    void onRelease(std::function<void()> cb);
+
+private:
+    static void IRAM_ATTR isrHandler(void* arg);
+
+    void handleEdge(bool pressed, unsigned long timeUs);
+
+    uint8_t _pin;
+    bool _activeLow;
+
+    volatile bool _edgeFlag;
+    volatile bool _edgeState;
+    volatile unsigned long _edgeTimeUs;
+
+    bool _state;
+    bool _longPressFired;
+    bool _waitingForSecondPress;
+
+    unsigned long _pressTimeMs;
+    unsigned long _lastReleaseTimeMs;
+    unsigned long _lastHoldRepeatTimeMs;
+    unsigned long _lastDebounceTimeMs;
+
+    std::function<void()> _onPress;
+    std::function<void()> _onDoublePress;
+    std::function<void()> _onLongPress;
+    std::function<void()> _onHoldRepeat;
+    std::function<void()> _onRelease;
+
+    static constexpr unsigned long DEBOUNCE_MS      = 40;
+    static constexpr unsigned long LONG_PRESS_MS   = 800;
+    static constexpr unsigned long DOUBLE_PRESS_MS = 400;
+    static constexpr unsigned long HOLD_REPEAT_MS  = 200;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#include "ButtonISR.h"
+
+ButtonISR::ButtonISR(uint8_t pin, bool activeLow)
+    : _pin(pin),
+      _activeLow(activeLow),
+      _edgeFlag(false),
+      _edgeState(false),
+      _edgeTimeUs(0),
+      _state(false),
+      _longPressFired(false),
+      _waitingForSecondPress(false),
+      _pressTimeMs(0),
+      _lastReleaseTimeMs(0),
+      _lastHoldRepeatTimeMs(0),
+      _lastDebounceTimeMs(0) {}
+
+void ButtonISR::begin() {
+    pinMode(_pin, _activeLow ? INPUT_PULLUP : INPUT);
+
+    attachInterruptArg(
+        _pin,
+        isrHandler,
+        this,
+        CHANGE
+    );
+}
+
+void IRAM_ATTR ButtonISR::isrHandler(void* arg) {
+    ButtonISR* btn = static_cast<ButtonISR*>(arg);
+
+    bool level = digitalRead(btn->_pin);
+    bool pressed = btn->_activeLow ? !level : level;
+
+    btn->_edgeState = pressed;
+    btn->_edgeTimeUs = micros();
+    btn->_edgeFlag = true;
+}
+
+void ButtonISR::update() {
+    unsigned long nowMs = millis();
+
+    // ----- Handle edge from ISR -----
+    if (_edgeFlag) {
+        noInterrupts();
+        bool pressed = _edgeState;
+        unsigned long edgeUs = _edgeTimeUs;
+        _edgeFlag = false;
+        interrupts();
+
+        unsigned long edgeMs = edgeUs / 1000;
+
+        if (edgeMs - _lastDebounceTimeMs >= DEBOUNCE_MS) {
+            _lastDebounceTimeMs = edgeMs;
+
+            // Pressed
+            if (pressed && !_state) {
+                _state = true;
+                _pressTimeMs = edgeMs;
+                _lastHoldRepeatTimeMs = edgeMs;
+                _longPressFired = false;
+            }
+
+            // Released
+            else if (!pressed && _state) {
+                _state = false;
+
+                if (_onRelease) _onRelease();
+
+                if (_longPressFired) {
+                    _waitingForSecondPress = false;
+                } else if (_waitingForSecondPress &&
+                           (edgeMs - _lastReleaseTimeMs <= DOUBLE_PRESS_MS)) {
+                    _waitingForSecondPress = false;
+                    if (_onDoublePress) _onDoublePress();
+                } else {
+                    _waitingForSecondPress = true;
+                    _lastReleaseTimeMs = edgeMs;
+                }
+            }
+        }
+    }
+
+    // ----- Long press + hold repeat -----
+    if (_state) {
+        if (!_longPressFired &&
+            (nowMs - _pressTimeMs >= LONG_PRESS_MS)) {
+            _longPressFired = true;
+            _lastHoldRepeatTimeMs = nowMs;
+            if (_onLongPress) _onLongPress();
+        }
+
+        if (_longPressFired &&
+            (nowMs - _lastHoldRepeatTimeMs >= HOLD_REPEAT_MS)) {
+            _lastHoldRepeatTimeMs = nowMs;
+            if (_onHoldRepeat) _onHoldRepeat();
+        }
+    }
+
+    // ----- Single press timeout -----
+    if (_waitingForSecondPress &&
+        (nowMs - _lastReleaseTimeMs > DOUBLE_PRESS_MS)) {
+        _waitingForSecondPress = false;
+        if (_onPress) _onPress();
+    }
+}
+
+void ButtonISR::onPress(std::function<void()> cb)       { _onPress = cb; }
+void ButtonISR::onDoublePress(std::function<void()> cb) { _onDoublePress = cb; }
+void ButtonISR::onLongPress(std::function<void()> cb)   { _onLongPress = cb; }
+void ButtonISR::onHoldRepeat(std::function<void()> cb)  { _onHoldRepeat = cb; }
+void ButtonISR::onRelease(std::function<void()> cb)     { _onRelease = cb; }
+
+
+
+
+
+
+
+
+#include "ButtonISR.h"
+
+ButtonISR btn1(10);
+ButtonISR btn2(20);
+
+void setup() {
+    Serial.begin(115200);
+
+    btn1.begin();
+    btn2.begin();
+
+    btn1.onPress([]() {
+        Serial.println("BTN1 press");
+    });
+
+    btn1.onLongPress([]() {
+        Serial.println("BTN1 long → sleep");
+    });
+
+    btn1.onHoldRepeat([]() {
+        Serial.println("BTN1 repeat");
+    });
+
+    btn2.onDoublePress([]() {
+        Serial.println("BTN2 double");
+    });
+}
+
+void loop() {
+    btn1.update();
+    btn2.update();
+}

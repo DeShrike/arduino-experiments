@@ -39,20 +39,30 @@ Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
 #define SCREEN_HEIGHT (tft.height())
 
 #ifdef DOUBLE_BUFFER
-GFXcanvas16 canvas(SCREEN_WIDTH, SCREEN_HEIGHT);
+// GFXcanvas16 canvas(SCREEN_WIDTH, SCREEN_HEIGHT);
+GFXcanvas16 canvas(SCREEN_HEIGHT, SCREEN_WIDTH);  // rotated 90°
 #endif
 
 void setup()
 {
+  Serial.begin(9600);
+  delay(500);
+
   SPI.begin(SCK, MISO, MOSI);  
 
   pinMode(BACKLIGHT_PIN, OUTPUT);
 
   tft.initR(INITR_BLACKTAB);  // Most 1.8" AZ-Delivery displays
+  tft.setRotation(1); // or 3 depending on wiring
   tft.fillScreen(ST7735_BLACK);
   delay(1000);
 
   analogWrite(BACKLIGHT_PIN, 127);
+
+  Serial.println("Setup Done");
+  Serial.println("Width:"); Serial.println(tft.width());
+  Serial.println("Height:"); Serial.println(tft.height());
+
 }
 
 void setPixel(uint8_t x, uint8_t y)
@@ -121,6 +131,7 @@ void loop()
   tft.fillScreen(ST7735_BLACK);
 #endif
 
+  drawLine(0, 0, canvas.width() - 1, 0);
   draw_shape(cube, ARRAY_SIZE(cube), cube_faces, ARRAY_SIZE(cube_faces));
 #ifdef DOUBLE_BUFFER
   tft.drawRGBBitmap(0, 0, canvas.getBuffer(), canvas.width(), canvas.height());

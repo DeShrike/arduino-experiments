@@ -1,0 +1,59 @@
+void enableButtonWake() {
+    esp_sleep_enable_gpio_wakeup();
+    gpio_wakeup_enable(GPIO_NUM_10, GPIO_INTR_LOW_LEVEL);
+    gpio_wakeup_enable(GPIO_NUM_20, GPIO_INTR_LOW_LEVEL);
+}
+
+bool wokeFromButton() {
+    return esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_GPIO;
+}
+
+#include "Button.h"
+
+constexpr uint8_t BTN1_PIN = 10;
+constexpr uint8_t BTN2_PIN = 20;
+
+Button btn1(BTN1_PIN);
+Button btn2(BTN2_PIN);
+
+
+
+
+
+
+void setup() {
+    Serial.begin(115200);
+    delay(100);
+
+    bool wokeByButton = wokeFromButton();
+
+    btn1.begin();
+    btn2.begin();
+
+    if (wokeByButton) {
+        Serial.println("Woke by button");
+    }
+
+    btn1.onPress([]() {
+        Serial.println("Button 1 press");
+    });
+
+    btn2.onPress([]() {
+        Serial.println("Button 2 press");
+    });
+
+    btn1.onLongPress([]() {
+        Serial.println("Sleep");
+        delay(50);
+        enableButtonWake();
+        esp_deep_sleep_start();
+    });
+}
+
+
+
+
+void loop() {
+    btn1.update();
+    btn2.update();
+}
