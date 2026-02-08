@@ -20,8 +20,6 @@
 #define RGBto565(r,g,b) ((((r) & 0xF8) << 8) | (((g) & 0xFC) << 3) | ((b) >> 3)) 
 #define MAP(x,in_min,in_max,out_min,out_max) \
   ((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
-//#define MAX(x,y) ((x) > (y) ? (x) : (y))
-//#define MIN(x,y) ((x) < (y) ? (x) : (x))
 
 /* https://www.otronic.nl/en/esp32-c3-wi-fi-ble.html
    TFT      ESP32-C3-SuperMini

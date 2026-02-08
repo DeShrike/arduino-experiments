@@ -44,8 +44,8 @@ void setup()
 
 void loop()
 {
-    Button::Event el = bluebox.leftButton.update();
-    Button::Event er = bluebox.rightButton.update();
+    auto el = bluebox.leftButton.update();
+    auto er = bluebox.rightButton.update();
 
     switch (mode)
     {
