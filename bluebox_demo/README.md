@@ -38,7 +38,7 @@ The button handlers.
 
 A simple full screen menu.
 
-**utils.cpp/utils.h**
+**Utils.cpp/Utils.h**
 
 Several utility functions.
 
@@ -87,13 +87,13 @@ Led and backlight pins are PWM enabled.
 - Pixels
 - Arcs
 - Sprites / 2-bit
+- RGB bitmaps
 
 ## Todo
 
-- Support for color bitmaps
 - Support for buzzer
 - Support for custom fonts
-- More demos: color blending, sprites, bitmaps, scrolling
+- More demos: color blending, sprites, scrolling
 
 ## Dependencies
 
@@ -119,4 +119,6 @@ Led and backlight pins are PWM enabled.
 ![BlueBox](assets/bluebox9.jpg)
 
 ![BlueBox](assets/bluebox10.jpg)
+
+![BlueBox](assets/bluebox11.jpg)
 

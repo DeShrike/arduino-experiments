@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "utils.h"
+#include "Utils.h"
 
 // Blend two RGB565 colors with alpha (0..1)
 uint16_t blendColor(uint16_t bg, uint16_t fg, float alpha)

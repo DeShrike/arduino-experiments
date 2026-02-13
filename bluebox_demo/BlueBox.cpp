@@ -1,7 +1,7 @@
 #include <SPI.h>
 #include <math.h>
 #include "BlueBox.h"
-#include "utils.h"
+#include "Utils.h"
 
 BlueBox::BlueBox() : tft(TFT_CS, TFT_DC, TFT_RST)
 {}
@@ -33,7 +33,7 @@ void BlueBox::init()
   pinMode(BUZZER_PIN, OUTPUT);
 
   backLight(255);
-  
+
   beginInput();
 
   initialized = true;
@@ -123,15 +123,12 @@ void BlueBox::measureText(const char* text, uint8_t fontSize, int* width, int* h
 {
     *height = 8 * fontSize;
     *width = 0;
-    
-    // Serial.println(text);
+
     while (*text)
     {
         *width += 6 * fontSize;
         text++;
     }
-    // Serial.println(*width);
-    // Serial.println(*height);
 }
 
 void BlueBox::drawTextCentered(int y, const char* text, uint16_t fgcolor, uint16_t bgcolor, uint8_t fontSize)
@@ -221,12 +218,26 @@ void BlueBox::drawSprite(int x, int y, const uint8_t* sprite, int w, int h, uint
 {
     for (int sy = 0; sy < h; sy++)
     {
-        for (int sx = 0; sx < w; sx++) 
+        for (int sx = 0; sx < w; sx++)
         {
             int byteIndex = (sy * ((w + 7) / 8)) + (sx / 8);
             bool pixelOn = sprite[byteIndex] & (0x80 >> (sx % 8));
             if (pixelOn) drawPixel(x + sx, y + sy, color);
         }
+    }
+
+    markDirty(x, y, x + w - 1, y + h - 1);
+}
+
+void BlueBox::drawRGBBitmap(int16_t x, int16_t y,
+                            const uint16_t bitmap[],
+                            int16_t w, int16_t h)
+{
+	for (int16_t yy = 0; yy < h; yy++)
+    {
+	 	const uint16_t* src = &bitmap[yy * w];
+		uint16_t* dest = &buffer[(y + yy) * w + x];
+		memcpy(dest, src, w * sizeof(uint16_t));
     }
 
     markDirty(x, y, x + w - 1, y + h - 1);
@@ -293,11 +304,11 @@ void BlueBox::drawRoundedCorner(uint16_t x0, uint16_t y0, uint16_t r, uint8_t co
             ddF_y += 2;
             f += ddF_y;
         }
-        
+
         x++;
         ddF_x += 2;
         f += ddF_x;
-        
+
         if (corner & 0x4)
         {
             setPixel(x0 + x, y0 + y);
@@ -337,7 +348,7 @@ void BlueBox::fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t corner
             ddF_y += 2;
             f += ddF_y;
         }
-        
+
         x++;
         ddF_x += 2;
         f += ddF_x;
@@ -347,7 +358,7 @@ void BlueBox::fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t corner
             drawVLine(x0 + x, y0 - y, y0 - y + 2 * y + 1 + delta, color);
             drawVLine(x0 + y, y0 - x, y0 - x + 2 * x + 1 + delta, color);
         }
-        
+
         if (cornername & 0x2)
         {
             drawVLine(x0 - x, y0 - y, y0 - y + 2 * y + 1 + delta, color);
@@ -372,11 +383,11 @@ void BlueBox::drawRoundedRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, ui
       uint16_t x2 = (w - 2 * r) + (x + r);
       drawHLine(x + r, x2, y, color); // Top
       drawHLine(x + r, x2, y + h - 1, color); // Bottom
-  
+
       uint16_t y2 = (h - 2 * r) + (y + r);
       drawVLine(x, y + r, y2, color); // Left
       drawVLine(x + w - 1, y + r, y2, color); // Right
-  
+
       // draw four corners
       drawRoundedCorner(x + r, y + r, r, 1, color);
       drawRoundedCorner(x + w - r - 1, y + r, r, 2, color);
@@ -432,7 +443,7 @@ void BlueBox::drawCircle(uint16_t x0, uint16_t y0, uint16_t r, uint16_t color, b
         if (d < 0)
         {
             d += 2 * x + 1;
-        } 
+        }
         else
         {
             y--;
@@ -455,7 +466,7 @@ void BlueBox::drawHLine(uint16_t x1, uint16_t x2, uint16_t y, uint16_t color)
     {
         return;
     }
-    
+
     if (y < 0 || y >= HEIGHT)
     {
         return;
@@ -491,14 +502,14 @@ void BlueBox::drawVLine(uint16_t x, uint16_t y1, uint16_t y2, uint16_t color)
     {
         return;
     }
-    
+
     for (uint16_t y = y1; y <= y2; ++y)
     {
         if (y < 0 || y >= HEIGHT)
         {
             return;
         }
-        
+
         setPixel(x, y);
     }
 
@@ -515,7 +526,7 @@ void BlueBox::drawLineLow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, ui
         yi = -1;
         dy = -dy;
     }
-    
+
     int16_t D = (2 * dy) - dx;
     uint16_t y = y0;
 
@@ -545,7 +556,7 @@ void BlueBox::drawLineHigh(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, u
         xi = -1;
         dx = -dx;
     }
-    
+
     int16_t D = (2 * dx) - dy;
     uint16_t x = x0;
 
@@ -629,12 +640,12 @@ void BlueBox::drawThickCircle(uint16_t x, uint16_t y, uint16_t r, uint16_t lineT
         {
             iterations = CurX;
         }
-        
+
         if (iterations < CurY)
         {
             iterations = CurY;
         }
-        
+
         xi[CurX * 2] = 0;
         xi[CurY * 2] = 0;
         xi[CurX * 2 + 1] = 0;
@@ -649,7 +660,7 @@ void BlueBox::drawThickCircle(uint16_t x, uint16_t y, uint16_t r, uint16_t lineT
             D += ((CurX - CurY) << 2) + 10;
             CurY--;
         }
-        
+
         CurX++;
     }
 
@@ -672,7 +683,7 @@ void BlueBox::drawThickCircle(uint16_t x, uint16_t y, uint16_t r, uint16_t lineT
             D += ((CurX - CurY) << 2) + 10;
             CurY--;
         }
-        
+
         CurX++;
     }
 
@@ -696,18 +707,18 @@ void BlueBox::drawThickCircle(uint16_t x, uint16_t y, uint16_t r, uint16_t lineT
 
 void BlueBox::drawThickArc(uint16_t x, uint16_t y, uint16_t r, uint16_t lineThickness, uint16_t startAngle, uint16_t endAngle, uint16_t color)
 {
-  startAngle = (startAngle + 90) % 360;
-  endAngle = (endAngle + 90) % 360;
+    startAngle = (startAngle + 90) % 360;
+    endAngle = (endAngle + 90) % 360;
 
-  if (startAngle < endAngle)
-  {
-    drawThickArcBase(x, y, r, lineThickness, startAngle, endAngle, color);
-  }
-  else
-  {
-    drawThickArcBase(x, y, r, lineThickness, startAngle, 360, color);
-    drawThickArcBase(x, y, r, lineThickness, 0, endAngle, color);
-  }
+    if (startAngle < endAngle)
+    {
+        drawThickArcBase(x, y, r, lineThickness, startAngle, endAngle, color);
+    }
+    else
+    {
+        drawThickArcBase(x, y, r, lineThickness, startAngle, 360, color);
+        drawThickArcBase(x, y, r, lineThickness, 0, endAngle, color);
+    }
 }
 
 void BlueBox::drawThickArcBase(uint16_t x, uint16_t y, uint16_t r, uint16_t lineThickness, uint16_t startAngle, uint16_t endAngle, uint16_t color)
@@ -808,59 +819,57 @@ void BlueBox::drawThickArcBase(uint16_t x, uint16_t y, uint16_t r, uint16_t line
     markDirty(minx, miny, maxx, maxy);
 }
 
-
-
 // BUTTONS
 void BlueBox::beginInput()
 {
-  leftButton.begin();
-  rightButton.begin();
+    leftButton.begin();
+    rightButton.begin();
 }
 
 void BlueBox::processInput()
 {
-  leftButton.update();
-  rightButton.update();
+    leftButton.update();
+    rightButton.update();
 }
 
 // LEDS
 void BlueBox::greenLed(bool flag)
 {
-  digitalWrite(LED1_PIN, flag ? HIGH : LOW);
-  greenLedState = flag;
+    digitalWrite(LED1_PIN, flag ? HIGH : LOW);
+    greenLedState = flag;
 }
 
 void BlueBox::redLed(bool flag)
 {
-  digitalWrite(LED2_PIN, flag ? HIGH : LOW);
-  redLedState = flag;
+    digitalWrite(LED2_PIN, flag ? HIGH : LOW);
+    redLedState = flag;
 }
 
 void BlueBox::toggleRedLed()
 {
-  redLedState = !redLedState;
-  digitalWrite(LED2_PIN, redLedState ? HIGH : LOW);
+    redLedState = !redLedState;
+    digitalWrite(LED2_PIN, redLedState ? HIGH : LOW);
 }
 
 void BlueBox::toggleGreenLed()
 {
-  greenLedState = !greenLedState;
-  digitalWrite(LED1_PIN, greenLedState ? HIGH : LOW);
+    greenLedState = !greenLedState;
+    digitalWrite(LED1_PIN, greenLedState ? HIGH : LOW);
 }
 
 // BACKLIGHT
 void BlueBox::backLight(uint8_t brightness)
 {
-  if (brightness == 0)
-  {
-    digitalWrite(BACKLIGHT_PIN, LOW);
-  }
-  else if (brightness == 255)
-  {
-    digitalWrite(BACKLIGHT_PIN, HIGH);
-  }
-  else
-  {
-    analogWrite(BACKLIGHT_PIN, brightness);
-  }
+    if (brightness == 0)
+    {
+        digitalWrite(BACKLIGHT_PIN, LOW);
+    }
+    else if (brightness == 255)
+    {
+        digitalWrite(BACKLIGHT_PIN, HIGH);
+    }
+    else
+    {
+        analogWrite(BACKLIGHT_PIN, brightness);
+    }
 }

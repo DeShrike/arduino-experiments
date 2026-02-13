@@ -1,5 +1,6 @@
 #include "BlueBox.h"
 #include "Menu.h"
+#include "cat1.h"
 
 uint16_t colors[] = {
   ST7735_WHITE,
@@ -38,6 +39,7 @@ void setup()
   menu.addItem(10, "Arcs");
   menu.addItem(11, "Text");
   menu.addItem(12, "Counter");
+  menu.addItem(13, "Bitmap");
   
   Serial.println("Setup Done");
 }
@@ -112,6 +114,10 @@ void loop()
         break;
       case 12: // Counter
         doMode12();
+        if (el == Button::LongPressed) mode = 0;
+        break;
+      case 13: // Bitmap
+        doMode13();
         if (el == Button::LongPressed) mode = 0;
         break;
     }
@@ -441,4 +447,18 @@ void doMode12()
   }
 
   delay(100);
+}
+
+/////////////////////////////////////////////////
+// Mode 13
+/////////////////////////////////////////////////
+
+void doMode13()
+{
+  bluebox.redLed(true);
+  bluebox.drawRGBBitmap(0, 0,
+                         cat1,
+                         CAT1_WIDTH, CAT1_HEIGHT);
+  bluebox.redLed(false);
+  delay(1000);
 }
