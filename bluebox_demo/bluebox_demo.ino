@@ -1,6 +1,9 @@
 #include "BlueBox.h"
 #include "Menu.h"
 #include "cat1.h"
+#include "cat2.h"
+#include "cat3.h"
+#include "cat4.h"
 
 uint16_t colors[] = {
   ST7735_WHITE,
@@ -453,12 +456,41 @@ void doMode12()
 // Mode 13
 /////////////////////////////////////////////////
 
+int16_t catx = 13, caty = 0, catdx = 1, catdy = 1, cat = 1;
+
 void doMode13()
 {
-  bluebox.redLed(true);
-  bluebox.drawRGBBitmap(0, 0,
-                         cat1,
-                         CAT1_WIDTH, CAT1_HEIGHT);
-  bluebox.redLed(false);
-  delay(1000);
+  //bluebox.redLed(true);
+  if (cat == 0)
+  {
+    bluebox.drawRGBBitmap(0, 0,
+                           cat1,
+                           CAT1_WIDTH, CAT1_HEIGHT);
+  }
+  else if (cat == 1)
+  {
+    bluebox.drawRGBBitmap(0, 0,
+                           cat2,
+                           CAT2_WIDTH, CAT2_HEIGHT);    
+  }
+  else if (cat == 2)
+  {
+    bluebox.drawRGBBitmap(0, 0,
+                           cat3,
+                           CAT3_WIDTH, CAT3_HEIGHT);    
+  }
+
+  bluebox.drawRGBBitmap(catx, caty,
+                         cat4,
+                         CAT4_WIDTH, CAT4_HEIGHT);
+
+  catx += catdx;
+  caty += catdy;
+  if (catx < 0) { catx = 0; catdx = -catdx; cat = (cat + 1) % 3; }
+  if (caty < 0) { caty = 0; catdy = -catdy; }
+  if (catx + CAT4_WIDTH >= bluebox.width()) { catx = bluebox.width() - CAT4_WIDTH; catdx = -catdx; }
+  if (caty + CAT4_HEIGHT >= bluebox.height()) { caty = bluebox.height() - CAT4_HEIGHT; catdy = -catdy; }
+
+  //bluebox.redLed(false);
+  //delay(10);
 }

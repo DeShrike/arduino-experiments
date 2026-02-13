@@ -236,7 +236,7 @@ void BlueBox::drawRGBBitmap(int16_t x, int16_t y,
 	for (int16_t yy = 0; yy < h; yy++)
     {
 	 	const uint16_t* src = &bitmap[yy * w];
-		uint16_t* dest = &buffer[(y + yy) * w + x];
+		uint16_t* dest = &buffer[(y + yy) * WIDTH + x];
 		memcpy(dest, src, w * sizeof(uint16_t));
     }
 
