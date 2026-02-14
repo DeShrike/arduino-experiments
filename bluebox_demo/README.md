@@ -38,6 +38,10 @@ The button handlers.
 
 A simple full screen menu.
 
+**TextFader.cpp/TextFader.h**
+
+A helper class for fading text in and out..
+
 **Utils.cpp/Utils.h**
 
 Several utility functions.
@@ -93,7 +97,7 @@ Led and backlight pins are PWM enabled.
 
 - Support for buzzer
 - Support for custom fonts
-- More demos: color blending, sprites, scrolling
+- More demos: scrolling, color blending
 
 ## Dependencies
 

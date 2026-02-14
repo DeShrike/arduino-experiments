@@ -1,9 +1,12 @@
 #include "BlueBox.h"
 #include "Menu.h"
+#include "TextFader.h"
 #include "cat1.h"
 #include "cat2.h"
 #include "cat3.h"
 #include "cat4.h"
+#include "jane.h"
+#include "notes.h"
 
 uint16_t colors[] = {
   ST7735_WHITE,
@@ -17,6 +20,16 @@ uint16_t colors[] = {
 };
 
 #define COLOR_COUNT (sizeof(colors) / sizeof(colors[0]))
+
+// notes in the melody:
+int melody[] = {
+  NOTE_C4, NOTE_G3, NOTE_G3, NOTE_A3, NOTE_G3, 0, NOTE_B3, NOTE_C4
+};
+
+// note durations: 4 = quarter note, 8 = eighth note, etc.:
+int noteDurations[] = {
+  4, 8, 8, 4, 4, 4, 4, 4
+};
 
 BlueBox bluebox;
 Menu menu(&bluebox);
@@ -43,6 +56,9 @@ void setup()
   menu.addItem(11, "Text");
   menu.addItem(12, "Counter");
   menu.addItem(13, "Bitmap");
+  menu.addItem(14, "FadeInOut");
+  menu.addItem(15, "Buzzer");
+  menu.addItem(16, "Sprite");
   
   Serial.println("Setup Done");
 }
@@ -121,6 +137,18 @@ void loop()
         break;
       case 13: // Bitmap
         doMode13();
+        if (el == Button::LongPressed) mode = 0;
+        break;
+      case 14: // FadeInOut
+        doMode14();
+        if (el == Button::LongPressed) mode = 0;
+        break;
+      case 15: // Buzzer
+        doMode15();
+        if (el == Button::LongPressed) mode = 0;
+        break;
+      case 16: // Sprite
+        doMode16();
         if (el == Button::LongPressed) mode = 0;
         break;
     }
@@ -291,25 +319,61 @@ void doMode6()
 // Mode 7
 /////////////////////////////////////////////////
 
-uint8_t b = 0;
+uint8_t gradientMode = 0;
 
 void doMode7()
 {
+  uint8_t r, g, b;
   for (uint8_t x = 0; x < bluebox.width(); x++)
   {
-    uint8_t r = MAP(x, 0, bluebox.width() - 1, 0, 255);
+    switch (gradientMode)
+    {
+      case 0:
+        r = MAP(x, 0, bluebox.width() - 1, 255, 0);
+        g = 0;
+        b = 0;
+        break;
+      case 1:
+        r = 0;
+        g = MAP(x, 0, bluebox.width() - 1, 255, 0);
+        b = 0;
+        break;
+      case 2:
+        r = 0;
+        g = 0;
+        b = MAP(x, 0, bluebox.width() - 1, 255, 0);
+        break;
+      case 3:
+        r = 0;
+        g = MAP(x, 0, bluebox.width() - 1, 255, 0);
+        b = MAP(x, 0, bluebox.width() - 1, 255, 0);
+        break;
+      case 4:
+        r = MAP(x, 0, bluebox.width() - 1, 255, 0);
+        g = 0;
+        b = MAP(x, 0, bluebox.width() - 1, 255, 0);
+        break;
+      case 5:
+        r = MAP(x, 0, bluebox.width() - 1, 255, 0);
+        g = MAP(x, 0, bluebox.width() - 1, 255, 0);
+        b = 0;
+        break;
+      case 6:
+        r = MAP(x, 0, bluebox.width() - 1, 255, 0);
+        g = MAP(x, 0, bluebox.width() - 1, 255, 0);
+        b = MAP(x, 0, bluebox.width() - 1, 255, 0);
+        break;
+    }
+
     for (uint8_t y = 0; y < bluebox.height(); y++)
     {
-      uint8_t g = MAP(y, 0, bluebox.height() - 1, 0, 255);
-      if (b % 2 == 0)
-        bluebox.drawPixelUnchecked(x, y, RGBto565(r, g, b));
-      else
-        bluebox.drawPixelUnchecked(x, y, RGBto565(g, r, b));
+      bluebox.drawPixelUnchecked(x, y, RGBto565(r, g, b));
     }
   }
 
-  b = (b + 15) % 255;
-  delay(250);
+  gradientMode = (gradientMode  + 1) % 7;
+
+  delay(1000);
 }
 
 /////////////////////////////////////////////////
@@ -493,4 +557,123 @@ void doMode13()
 
   //bluebox.redLed(false);
   //delay(10);
+}
+
+/////////////////////////////////////////////////
+// Mode 14
+/////////////////////////////////////////////////
+TextFader* text1 = nullptr;
+TextFader* text2 = nullptr;
+TextFader* text3 = nullptr;
+
+void doMode14()
+{
+    if (text1 == nullptr)
+    {
+        text1 = new TextFader(&bluebox, 10, 10, "ESP32-C3", 2, ST7735_RED, ST7735_YELLOW);
+        text1->onStateChange([](FaderState state) {
+            //Serial.print("Text1 onStateChange ");
+            //Serial.println(text1->stateName());
+            if (state == FaderState::FadedIn)
+            {
+                bluebox.toggleGreenLed();
+                text2->fadeIn();
+            }
+            else if (state == FaderState::FadedOut)
+            {
+                text1->fadeIn();
+            }
+        });
+
+        text1->fadeIn();
+        bluebox.fill(ST7735_YELLOW);
+    }
+
+    if (text2 == nullptr)
+    {
+        text2 = new TextFader(&bluebox, 10, 30, "CoderDojo", 2, ST7735_BLUE, ST7735_YELLOW);
+        text2->onStateChange([](FaderState state) {
+            //Serial.print("Text2 onStateChange ");
+            //Serial.println(text2->stateName());
+            if (state == FaderState::FadedIn)
+            {
+                text3->fadeIn();
+            }
+            else if (state == FaderState::FadedOut)
+            {
+                text1->fadeOut();
+            }
+        });
+    }
+
+    if (text3 == nullptr)
+    {
+        text3 = new TextFader(&bluebox, 10, 50, "Roeselare", 2, ST7735_GREEN, ST7735_YELLOW);
+        text3->onStateChange([](FaderState state) {
+            //Serial.print("Text3 onStateChange ");
+            //Serial.println(text3->stateName());
+            if (state == FaderState::FadedIn)
+            {
+                text3->fadeOut();
+            }
+            else if (state == FaderState::FadedOut)
+            {
+                text2->fadeOut();
+            }
+        });
+    }
+
+    text1->update();
+    text2->update();
+    text3->update();
+}
+
+/////////////////////////////////////////////////
+// Mode 15
+/////////////////////////////////////////////////
+
+void playMelody()
+{
+  // iterate over the notes of the melody:
+  for (int thisNote = 0; thisNote < 8; thisNote++)
+  {
+
+    // to calculate the note duration, take one second divided by the note type.
+    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
+    int noteDuration = 1000 / noteDurations[thisNote];
+    tone(BUZZER_PIN, melody[thisNote], noteDuration);
+
+    // to distinguish the notes, set a minimum time between them.
+    // the note's duration + 30% seems to work well:
+    int pauseBetweenNotes = noteDuration * 1.30;
+    delay(pauseBetweenNotes);
+    // stop the tone playing:
+    noTone(BUZZER_PIN);
+  }
+}
+
+void doMode15()
+{
+  bluebox.fill(ST7735_GREEN);
+  int y = (bluebox.height() - (5 * 20)) / 2;
+  bluebox.drawTextCentered(y, "Buzzer", ST7735_RED, ST7735_GREEN, 3);
+  bluebox.flush();
+
+  bluebox.greenLed(true);
+  playMelody();
+  bluebox.greenLed(false);
+
+  mode = 0;
+}
+
+/////////////////////////////////////////////////
+// Mode 16
+/////////////////////////////////////////////////
+void doMode16()
+{
+  int x = (bluebox.width() - JANE_WIDTH) / 2;
+  int y = (bluebox.height() - JANE_HEIGHT) / 2;
+  bluebox.drawSprite(x, y, jane_bmp, JANE_WIDTH, JANE_HEIGHT, colors[colorIndex]);  
+  colorIndex = (colorIndex + 1) % COLOR_COUNT;
+  delay(500);
 }
