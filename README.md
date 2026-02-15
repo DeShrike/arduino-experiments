@@ -136,3 +136,14 @@ Simple 3D rotating cube and pyramid on a SSD1306 OLED display.
 ### st7735-3d-esp32
 
 Simple 3D rotating cube on a ST7735 TFT display.
+
+### bluebox_demo
+
+Demo of the BlueBox.
+
+![BlueBox](bluebox_demo/assets/bluebox1.jpg)
+
+### bluebox_starter
+
+Simpler demo of the BlueBox.
+

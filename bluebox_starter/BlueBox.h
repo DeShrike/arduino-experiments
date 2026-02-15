@@ -21,44 +21,6 @@
 #define MAP(x,in_min,in_max,out_min,out_max) \
   ((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
 
-
-// Predefined Colors
-#define BLUEBOX_LIME 0xa620 // Lime #A4C400 RGB(164, 196, 0)
-#define BLUEBOX_GREEN 0x6542 // Green #60A917 RGB(96, 169, 23)
-#define BLUEBOX_EMERALD 0x440 // Emerald #008A00 RGB(0, 138, 0)
-#define BLUEBOX_TEAL 0x555 // Teal #00ABA9 RGB(0, 171, 169)
-#define BLUEBOX_CYAN 0x1d1c // Cyan #1BA1E2 RGB(27, 161, 226)
-#define BLUEBOX_COBALT 0x29d // Cobalt #0050EF RGB(0, 80, 239)
-#define BLUEBOX_INDIGO 0x681f // Indigo #6A00FF RGB(106, 0, 255)
-#define BLUEBOX_VIOLET 0xa81f // Violet #AA00FF RGB(170, 0, 255)
-#define BLUEBOX_PINK 0xf39a // Pink #F472D0 RGB(244, 114, 208)
-#define BLUEBOX_MAGENTA 0xd80e // Magenta #D80073 RGB(216, 0, 115)
-#define BLUEBOX_CRIMSON 0xa004 // Crimson #A20025 RGB(162, 0, 37)
-#define BLUEBOX_RED 0xe0a0 // Red #E51400 RGB(229, 20, 0)
-#define BLUEBOX_ORANGE 0xfb40 // Orange #FA6800 RGB(250, 104, 0)
-#define BLUEBOX_AMBER 0xf501 // Amber #F0A30A RGB(240, 163, 10)
-#define BLUEBOX_YELLOW 0xe640 // Yellow #E3C800 RGB(227, 200, 0)
-#define BLUEBOX_BROWN 0x82c5 // Brown #825A2C RGB(130, 90, 44)
-#define BLUEBOX_OLIVE 0x6c2c // Olive #6D8764 RGB(109, 135, 100)
-#define BLUEBOX_STEEL 0x63b0 // Steel #647687 RGB(100, 118, 135)
-#define BLUEBOX_MAUVE 0x7311 // Mauve #76608A RGB(118, 96, 138)
-#define BLUEBOX_TAUPE 0x83c9 // Taupe #87794E RGB(135, 121, 78)
-
-#define BLUEBOX_BLUE  BLUEBOX_COBALT
-#define BLUEBOX_BLACK 0x0000
-#define BLUEBOX_WHITE 0xffff
-
-#define BLUEBOX_GRAY1 0x2104
-#define BLUEBOX_GRAY2 0x4208
-#define BLUEBOX_GRAY3 0x630C
-#define BLUEBOX_GRAY4 0x8410
-#define BLUEBOX_GRAY5 0xa514
-#define BLUEBOX_GRAY6 0xc618
-
-extern const uint16_t bluebox_colors[];
-extern const char* bluebox_color_names[];
-extern const uint8_t BLUEBOX_COLOR_COUNT;
-
 /* https://www.otronic.nl/en/esp32-c3-wi-fi-ble.html
    TFT      ESP32-C3-SuperMini
    ------   ----------------------
@@ -82,6 +44,43 @@ extern const uint8_t BLUEBOX_COLOR_COUNT;
 #define LEFTBUTTON_PIN  20
 
 #define BACKLIGHT_PIN 5
+
+// Predefined Colors
+#define BLUEBOX_LIME 0xa620 // Lime #A4C400 RGB(164, 196, 0)
+#define BLUEBOX_GREEN 0x6542 // Green #60A917 RGB(96, 169, 23)
+#define BLUEBOX_EMERALD 0x440 // Emerald #008A00 RGB(0, 138, 0)
+#define BLUEBOX_TEAL 0x555 // Teal #00ABA9 RGB(0, 171, 169)
+#define BLUEBOX_CYAN 0x1d1c // Cyan #1BA1E2 RGB(27, 161, 226)
+#define BLUEBOX_COBALT 0x29d // Cobalt #0050EF RGB(0, 80, 239)
+#define BLUEBOX_INDIGO 0x681f // Indigo #6A00FF RGB(106, 0, 255)
+#define BLUEBOX_VIOLET 0xa81f // Violet #AA00FF RGB(170, 0, 255)
+#define BLUEBOX_PINK 0xf39a // Pink #F472D0 RGB(244, 114, 208)
+#define BLUEBOX_MAGENTA 0xd80e // Magenta #D80073 RGB(216, 0, 115)
+#define BLUEBOX_CRIMSON 0xa004 // Crimson #A20025 RGB(162, 0, 37)
+#define BLUEBOX_RED 0xe0a0 // Red #E51400 RGB(229, 20, 0)
+#define BLUEBOX_ORANGE 0xfb40 // Orange #FA6800 RGB(250, 104, 0)
+#define BLUEBOX_AMBER 0xf501 // Amber #F0A30A RGB(240, 163, 10)
+#define BLUEBOX_YELLOW 0xe640 // Yellow #E3C800 RGB(227, 200, 0)
+#define BLUEBOX_BROWN 0x82c5 // Brown #825A2C RGB(130, 90, 44)
+#define BLUEBOX_OLIVE 0x6c2c // Olive #6D8764 RGB(109, 135, 100)
+#define BLUEBOX_STEEL 0x63b0 // Steel #647687 RGB(100, 118, 135)
+#define BLUEBOX_MAUVE 0x7311 // Mauve #76608A RGB(118, 96, 138)
+#define BLUEBOX_TAUPE 0x83c9 // Taupe #87794E RGB(135, 121, 78)
+
+#define BLUEBOX_GRAY1 0x2104
+#define BLUEBOX_GRAY2 0x4208
+#define BLUEBOX_GRAY3 0x630C
+#define BLUEBOX_GRAY4 0x8410
+#define BLUEBOX_GRAY5 0xa514
+#define BLUEBOX_GRAY6 0xc618
+
+#define BLUEBOX_BLACK 0x0000
+#define BLUEBOX_WHITE 0xffff
+#define BLUEBOX_BLUE  BLUEBOX_COBALT
+
+extern const uint16_t bluebox_colors[];
+extern const char* bluebox_color_names[];
+extern const uint8_t BLUEBOX_COLOR_COUNT;
 
 class BlueBox
 {
