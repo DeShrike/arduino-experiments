@@ -1,0 +1,188 @@
+#include <WiFi.h>
+#include <NetworkClient.h>
+#include <WebServer.h>
+#include <ESPmDNS.h>
+
+const char *SSID = "\x74\x63\x65\x37\x44\x6c\x69\x48\x30\x65\x48\x31\x73\x71\x6e\x57\x6d\x30\x6b\x75\x65\x30\x4f\x63\x72\x7a\x78\x74\x36\x74\x44\x66\x36\x4b\x55\x2d\x37\x74\x49\x30\x4a\x72\x48\x62\x31\x30\x32\x55\x50\x6d\x49\x49\x4d\x4c\x46\x39\x62\x74\x34\x6e\x63\x36\x70\x71\x6b\x35\x33\x36\x75\x63\x31\x39\x6d\x57\x37\x54\x33\x31\x38\x6b\x32\x6b\x37\x42\x5a\x79\x30\x75\x32\x32\x36\x50\x32\x33\x30\x74\x71\x30\x35\x45\x32\x36\x6a\x4d";
+const char *PW = "\x58\x30\x70\x43\x44\x61\x76\x61\x4a\x41\x33\x36\x6f\x62\x35\x32\x4a\x46\x4d\x43\x37\x6e\x35\x65\x30\x39\x33\x33\x35\x74\x49\x4e\x6c\x71\x31\x70\x30\x67\x59\x38\x6a\x44\x52\x33\x7a\x39\x37\x72\x38\x70\x45\x43\x44\x47\x76\x54\x66\x52\x57\x32\x38\x53\x70\x36\x39\x56\x53\x52\x52\x6b\x53\x69\x58\x38\x65\x4c\x32\x64\x30\x31\x30\x34\x70\x39\x72\x34\x4e\x35\x37\x4e";
+
+unsigned long requestCount = 0;
+
+WebServer server(80);
+
+void decode(const char *encoded, char *result, size_t result_size)
+{          
+   char *r = result;
+   const char *e = encoded;
+   uint16_t ix = 0;
+   while (*e) { *r++ = *e++; e += ++ix; }
+   *r = 0;
+}  
+
+void sendHtmlHeader()
+{
+  server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  server.send(200, "text/html", "");
+  server.sendContent(
+    "<html>"
+    "<head>"
+    // "<meta http-equiv='refresh' content='5'/>"
+    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"/>"
+    "<title>ESP32 Demo</title>"
+    "<style>"
+    "body {"
+    "  background-color: #cccccc;"
+    "  font-family: Arial, Helvetica, Sans-Serif;"
+    "  color: #000000;"
+    "  padding: 20px;"
+    "}"
+    "</style>"
+    "</head>"
+    "<body>");
+}
+
+void sendHtmlFooter()
+{
+  server.sendContent("</body></html>");
+  // End the reponse
+  server.sendContent("");
+}
+
+void handleRoot()
+{
+  char temp[500];
+  int sec = millis() / 1000;
+  int hr = sec / 3600;
+  int min = (sec / 60) % 60;
+  sec = sec % 60;
+
+  requestCount++;
+
+  snprintf(
+    temp, 500,
+
+    "<h1>Hello from ESP32!</h1>"
+    "<p>Uptime: %02d:%02d:%02d</p>"
+    "<p>Status: <a href=\"/status\">Status</a></p>",
+
+    hr, min, sec
+  );
+
+  sendHtmlHeader();
+  server.sendContent(temp);
+  sendHtmlFooter();
+}
+
+void handleStatus()
+{
+/*
+  String json = "{";
+  json += "\"requestCount\":" + String(requestCount) + ",";
+  json += "\"freeHeap\":" + String(ESP.getFreeHeap()) + ",";
+  json += "\"uptime\":" + String(millis()) + ",";
+  json += "\"cpuFreq\":" + String(ESP.getCpuFreqMHz()) + ",";
+  json += "\"chipModel\":\"" + String(ESP.getChipModel()) + "\",";
+  json += "\"flashSize\":" + String(ESP.getFlashChipSize()) + ",";
+  json += "\"wifiRSSI\":" + String(WiFi.RSSI());
+  json += "}";
+  
+  server.send(200, "application/json", json);
+*/
+
+  String html = "<!-- body -->";
+  html += "<h1>Status</h1>";
+  html += "<table border='0'>";
+  html += "<tr><td>Request Count</td><td>" + String(requestCount) + "</td></tr>";
+  html += "<tr><td>Free Heap</td><td>" + String(ESP.getFreeHeap()) + "</td></tr>";
+  html += "<tr><td>Uptime</td><td>" + String(millis()) + "</td></tr>";
+  html += "<tr><td>CPU Freq</td><td>" + String(ESP.getCpuFreqMHz()) + " MHz</td></tr>";
+  html += "<tr><td>Chip Model</td><td>" + String(ESP.getChipModel()) + "</td></tr>";
+  html += "<tr><td>Flash Size</td><td>" + String(ESP.getFlashChipSize()) + "</td></tr>";
+  html += "<tr><td>Wifi RSSI</td><td>" + String(WiFi.RSSI()) + "</td></tr>";
+  html += "</table>";
+  html += "<p>Home: <a href=\"/\">Home</a></p>";
+
+  sendHtmlHeader();
+  server.sendContent(html);
+  sendHtmlFooter();
+
+  requestCount++;
+}
+
+void handleNotFound()
+{
+  String message = "File Not Found\n\n";
+  message += "URI: ";
+  message += server.uri();
+  message += "\nMethod: ";
+  message += (server.method() == HTTP_GET) ? "GET" : "POST";
+  message += "\nArguments: ";
+  message += server.args();
+  message += "\n";
+
+  for (uint8_t i = 0; i < server.args(); i++)
+  {
+    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+  }
+
+  server.send(404, "text/plain", message);
+
+  requestCount++;
+}
+
+void setup(void)
+{
+  Serial.begin(9600);
+  delay(500);
+
+  char ssid[100];
+  char pw[100];
+  decode(SSID, ssid, 100);
+  decode(PW, pw, 100);
+
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, pw);
+
+  Serial.println("");
+
+  // Wait for connection
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+  Serial.print("Connected to ");
+  Serial.println(ssid);
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  if (MDNS.begin("esp32"))
+  {
+    Serial.println("MDNS responder started");
+  }
+
+  server.onNotFound(handleNotFound);
+  server.on("/", handleRoot);
+  server.on("/status", handleStatus);
+  server.begin();
+
+  Serial.println("HTTP server started");
+}
+
+void loop()
+{
+  server.handleClient();
+  delay(10);
+  
+  static unsigned long lastPrint = 0;
+  if (millis() - lastPrint > 30000)
+  {
+    lastPrint = millis();
+    Serial.println("Status: Requests: " + String(requestCount) + 
+                   ", Free Heap: " + String(ESP.getFreeHeap()));
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
+  }
+}
