@@ -2,8 +2,23 @@
 #include "WwwServer.h"
 #include "config.h"
 #include "mbedtls/base64.h"
+#include <Adafruit_Protomatter.h>
+#include <Fonts/FreeSansBold18pt7b.h>
+
+uint8_t rgbPins[]  = {42, 41, 40, 38, 39, 37};
+uint8_t addrPins[] = {45, 36, 48, 35, 21};
+uint8_t clockPin   = 2;
+uint8_t latchPin   = 47;
+uint8_t oePin      = 14;
+
+enum class Modes {
+  Idle,
+  Text,
+  Frame
+};
 
 WwwServer wwwServer;
+Modes mode = Modes::Idle;
 
 // For POST of full frame
 static const size_t WIDTH = 64;
@@ -13,8 +28,54 @@ static const size_t EXPECTED_BYTES = ELEMENT_COUNT * sizeof(uint16_t);
 
 uint16_t frame[HEIGHT][WIDTH];
 
+Adafruit_Protomatter matrix(
+  64,          // Matrix width in pixels
+  4,           // Bit depth -- 6 here provides maximum color options
+  1, rgbPins,  // # of matrix chains, array of 6 RGB pins for each
+  4, addrPins, // # of address pins (height is inferred), array of pins
+  clockPin, latchPin, oePin, // Other matrix control pins
+  true);       // HERE IS THE MAGIC FOR DOUBLE-BUFFERING!
+
+#define MAX_TEXT_SIZE 64
+#define MAX_COLOR_SIZE 10
+
+int16_t  textX1;        // Current text position (X)
+int16_t  textY1;        // Current text position (Y)
+int16_t  textMin1;      // Text pos. (X) when scrolled off left edge
+char     scrollText[MAX_TEXT_SIZE];      // Buffer to hold scrolling message text
+char     scrollColorText[MAX_COLOR_SIZE];      // Buffer to hold scrolling message text
+uint16_t scrollColor;
+
+void initText(const char* text, uint16_t color)
+{
+  // Set up the scrolling message...
+  if (text == NULL)
+  {
+    sprintf(scrollText, "Coderdojo Belgium %dx%d", matrix.width(), matrix.height()); 
+  }
+  else
+  {
+    strncpy(scrollText, text, MAX_TEXT_SIZE);
+  }
+  matrix.setFont(&FreeSansBold18pt7b); // Use nice bitmap font 
+  matrix.setTextWrap(false); // Allow text off edge matrix.setTextColor(0xFFFF); 
+
+  scrollColor = color;
+
+  int16_t  x1, y1;
+  uint16_t w, h;
+
+  matrix.getTextBounds(scrollText, 0, 0, &x1, &y1, &w, &h); // How big is it?
+  textMin1 = -w; // All text is off left edge when it reaches this point
+  textX1 = matrix.width(); // Start off right edge
+  textY1 = matrix.height() / 2 - (y1 + h / 2); // Center text vertically
+
+  mode = Modes::Text;
+}
+
 void handleRoot()
 {
+  /*
   char temp[500];
   int sec = millis() / 1000;
   int hr = sec / 3600;
@@ -24,77 +85,106 @@ void handleRoot()
   snprintf(
     temp, 500,
 
-    "<h1>Hello from ESP32!</h1>"
-    "<p>Uptime: %02d:%02d:%02d</p>"
-    "<p>Status: <a href=\"/status\">Status</a></p>",
+    "<p>Uptime: %02d:%02d:%02d</p>",
 
     hr, min, sec
   );
-
+*/
   wwwServer.sendHtmlHeader();
-  wwwServer.sendContent(temp);
+
+  wwwServer.sendTitle("Matrixportal");
+  //wwwServer.sendContent(temp);
+  wwwServer.sendFormStyle();
+  wwwServer.sendHtmlForm(String(scrollText), String(scrollColorText));
+  wwwServer.sendFormPostScript();
+
+  wwwServer.sendNavButton("Status", "/status");
+  wwwServer.sendNavButton("Draw", "/draw");
+
   wwwServer.sendHtmlFooter();
 }
 
 void handleStatus()
 {
-/*
-  String json = "{";
-  json += "\"requestCount\":" + String(requestCount) + ",";
-  json += "\"freeHeap\":" + String(ESP.getFreeHeap()) + ",";
-  json += "\"uptime\":" + String(millis()) + ",";
-  json += "\"cpuFreq\":" + String(ESP.getCpuFreqMHz()) + ",";
-  json += "\"chipModel\":\"" + String(ESP.getChipModel()) + "\",";
-  json += "\"flashSize\":" + String(ESP.getFlashChipSize()) + ",";
-  json += "\"wifiRSSI\":" + String(WiFi.RSSI());
-  json += "}";
-  
-  server.send(200, "application/json", json);
-*/
-
-  String html = "<!-- body -->";
-  html += "<h1>Status</h1>";
-  html += "<table border='0'>";
-  html += "<tr><td>Local IP</td><td>" + wwwServer.localIP() + "</td></tr>";
-  html += "<tr><td>Free Heap</td><td>" + String(ESP.getFreeHeap()) + "</td></tr>";
-  html += "<tr><td>Uptime</td><td>" + String(millis()) + "</td></tr>";
-  html += "<tr><td>CPU Freq</td><td>" + String(ESP.getCpuFreqMHz()) + " MHz</td></tr>";
-  html += "<tr><td>Chip Model</td><td>" + String(ESP.getChipModel()) + "</td></tr>";
-  html += "<tr><td>Flash Size</td><td>" + String(ESP.getFlashChipSize()) + "</td></tr>";
-  html += "</table>";
-  html += "<p>Home: <a href=\"/\">Home</a></p>";
-
   wwwServer.sendHtmlHeader();
-  wwwServer.sendContent(html);
+  wwwServer.sendFormStyle();
+  wwwServer.sendTitle("Status");
+  wwwServer.sendStatusPage(String(scrollText), String(scrollColorText));
+  wwwServer.sendNavButton("Home", "/");
   wwwServer.sendHtmlFooter();
 }
 
-void handleFrame()
+void handleDrawPage()
 {
-    Serial.println("handleFrame");
+  wwwServer.sendHtmlHeader();
+  wwwServer.sendFormStyle();
+  wwwServer.sendTitle("Draw");
+  wwwServer.sendDrawPage();
+  wwwServer.sendNavButton("Home", "/");
+  wwwServer.sendHtmlFooter();
+}
+
+void handleText()
+{
     if (wwwServer.method() != HTTP_POST)
     {
         wwwServer.send(405, "text/plain", "Method Not Allowed");
         return;
     }
 
-    Serial.println("Method OK");
+    if (!wwwServer.hasArg("text"))
+    {
+        wwwServer.send(400, "text/plain", "Missing text field");
+        return;
+    }
+
+    String text = wwwServer.arg("text");
+
+    Serial.println(text);
+
+    if (text.length() >= MAX_TEXT_SIZE)
+    {
+        wwwServer.send(400, "text/plain", "Text too long");
+        return;
+    }
+
+    uint16_t color = scrollColor;
+    if (wwwServer.hasArg("color"))
+    {
+      String colorStr = wwwServer.arg("color"); // "#ff0000"
+      strncpy(scrollColorText, colorStr.c_str(), MAX_COLOR_SIZE);
+      Serial.println(colorStr);
+      int r = strtoul(colorStr.substring(1,3).c_str(), NULL, 16);
+      int g = strtoul(colorStr.substring(3,5).c_str(), NULL, 16);
+      int b = strtoul(colorStr.substring(5,7).c_str(), NULL, 16);
+      color = matrix.color565(r,  g,  b);
+    }
+
+    initText(text.c_str(), color);
+    
+    wwwServer.send(200, "text/plain", "OK");
+}
+
+void handleFrame()
+{
+    if (wwwServer.method() != HTTP_POST)
+    {
+        wwwServer.send(405, "text/plain", "Method Not Allowed");
+        return;
+    }
 
     if (!wwwServer.hasArg("data"))
     {
         wwwServer.send(400, "text/plain", "Missing data field");
+        Serial.println("Missing data field");
         return;
     }
 
-    Serial.println("'data' field found");
-
     String b64 = wwwServer.arg("data");
     size_t len = b64.length();
-
-    Serial.print("'data' length:");
-    Serial.println(len);
-
     size_t required_size;
+
+    // check if size will be correct after decoding
     mbedtls_base64_decode(
         NULL,
         0,
@@ -106,15 +196,9 @@ void handleFrame()
     if (required_size != EXPECTED_BYTES)
     {
         wwwServer.send(400, "text/plain", "Invalid size");
+        Serial.println("Invalid Size");
         return;
     }
-
-    Serial.println("length OK");
-
-    Serial.println("Method: " + String(wwwServer.method()));
-    Serial.println("Content-Length: " + String(wwwServer.contentLength()));
-    Serial.println("Args: " + String(wwwServer.args()));
-    Serial.println("Arg[0]: " + wwwServer.argName(0));
 
     size_t max_decoded = (len * 3) / 4;
 
@@ -130,20 +214,29 @@ void handleFrame()
     if (ret != 0 || output_len != ELEMENT_COUNT * sizeof(uint16_t))
     {
         wwwServer.send(400, "text/plain", "Invalid data");
+        Serial.println("Invalid Data");
         return;
     }
 
-    // ✅ Now frame[][] is directly usable
-    Serial.println(frame[0][0]);
-    Serial.println(frame[31][63]);
-
     wwwServer.send(200, "text/plain", "OK");
+    Serial.println("Frame OK");
+    mode = Modes::Frame;
 }
 
 void setup(void)
 {
   Serial.begin(9600);
   delay(500);
+
+  // Initialize matrix...
+  ProtomatterStatus status = matrix.begin();
+  Serial.print("Protomatter begin() status: ");
+  Serial.println((int)status);
+  if(status != PROTOMATTER_OK)
+  {
+    // DO NOT CONTINUE if matrix setup encountered an error.
+    for(;;);
+  }
 
   if (!wwwServer.init(SSID, PW))
   {
@@ -154,10 +247,15 @@ void setup(void)
 
   wwwServer.on("/", handleRoot);
   wwwServer.on("/status", handleStatus);
+  wwwServer.on("/draw", handleDrawPage);
+  wwwServer.on("/text", handleText);
   wwwServer.on("/frame", HTTP_POST, handleFrame);
   wwwServer.begin();
 
   Serial.println("HTTP server started");
+
+  initText(wwwServer.localIP().c_str(), matrix.color565(228,  0,  0));
+  strncpy(scrollColorText, "#FF0000", MAX_COLOR_SIZE);
 }
 
 void loop()
@@ -173,5 +271,37 @@ void loop()
                    ", Free Heap: " + String(ESP.getFreeHeap()));
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
+  }
+
+  if (mode == Modes::Text)
+  {
+    matrix.fillScreen(0); // Fill background black
+  
+    // Draw the big scrolly text
+    matrix.setFont(&FreeSansBold18pt7b); // Use nice bitmap font
+    matrix.setTextColor(scrollColor);
+    matrix.setCursor(textX1, textY1);
+    matrix.print(scrollText);
+  
+    // Update text position for next frame. If text goes off the
+    // left edge, reset its position to be off the right edge.
+    if ((--textX1) < textMin1) textX1 = matrix.width();
+  
+    matrix.show();
+  }
+  else if (mode == Modes::Frame)
+  {
+    Serial.println("Drawing frame");
+    for (uint16_t y = 0; y < HEIGHT; y++)
+    {
+      for (uint16_t x = 0; x < WIDTH; x++)
+      {
+        matrix.drawPixel(x, y, frame[y][x]);
+      }
+    }
+  
+    matrix.show();
+
+    mode = Modes::Idle;
   }
 }

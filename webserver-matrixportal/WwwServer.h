@@ -14,6 +14,7 @@ class WwwServer
 
     void decode(const char *encoded, char *result, size_t result_size);
     void handleNotFound();
+    String htmlEscape(const String& s);
 
   public:
     unsigned long requestCount = 0;
@@ -45,6 +46,14 @@ class WwwServer
 
     void sendHtmlHeader();
     void sendHtmlFooter();
+    void sendHtmlForm(const String& currentText, const String& currentColor);
+    void sendFormPostScript();
+    void sendFormStyle();
+    void sendStatusPage(const String& currentText, const String& currentColor);
+    void sendNavButton(const String& label, const String& target);
+    void sendTitle(const String& text);
+    void sendDrawPage();
+
 
     String uri() const;
     HTTPMethod method() const;
