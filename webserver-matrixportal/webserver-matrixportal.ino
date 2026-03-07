@@ -4,6 +4,8 @@
 #include "mbedtls/base64.h"
 #include <Adafruit_Protomatter.h>
 #include <Fonts/FreeSansBold18pt7b.h>
+#include <Fonts/FreeSans9pt7b.h>
+#include <Fonts/TomThumb.h>
 
 uint8_t rgbPins[]  = {42, 41, 40, 38, 39, 37};
 uint8_t addrPins[] = {45, 36, 48, 35, 21};
@@ -45,6 +47,38 @@ int16_t  textMin1;      // Text pos. (X) when scrolled off left edge
 char     scrollText[MAX_TEXT_SIZE];      // Buffer to hold scrolling message text
 char     scrollColorText[MAX_COLOR_SIZE];      // Buffer to hold scrolling message text
 uint16_t scrollColor;
+
+void showAPinfo()
+{
+  Serial.println("Showing AP info");
+  //matrix.setFont(&FreeSans9pt7b);
+  matrix.setFont(&TomThumb);
+  matrix.setTextWrap(false); // Allow text off edge matrix.setTextColor(0xFFFF); 
+
+  matrix.setTextColor(matrix.color565(32, 32, 32));
+  matrix.setCursor(1, 6);
+  matrix.print("Wifi:");
+
+  matrix.setTextColor(matrix.color565(64, 0, 64));
+  matrix.setCursor(18, 6);
+  matrix.print(SSID);
+
+  matrix.setTextColor(matrix.color565(32, 32, 32));
+  matrix.setCursor(1, 12);
+  matrix.print("Pw:");
+
+  matrix.setTextColor(matrix.color565(64, 64, 0));
+  matrix.setCursor(18, 12);
+  matrix.print(PW);
+
+  matrix.setTextColor(matrix.color565(0, 0, 64));
+  matrix.setCursor(1, 18);
+  char temp[100];
+  sprintf(temp, "http://%s", WiFi.softAPIP().toString().c_str());
+  matrix.print(temp);
+
+  matrix.show();
+}
 
 void initText(const char* text, uint16_t color)
 {
@@ -227,6 +261,7 @@ void setup(void)
 {
   Serial.begin(9600);
   delay(500);
+  delay(5000);
 
   // Initialize matrix...
   ProtomatterStatus status = matrix.begin();
@@ -238,7 +273,10 @@ void setup(void)
     for(;;);
   }
 
-  if (!wwwServer.init(SSID, PW))
+  Serial.println(SSID);
+  Serial.println(PW);
+
+  if (!wwwServer.init(SSID, PW, USE_AP))
   {
      Serial.println("HTTP server NOT started");
      Serial.println("Is the SSID and password correct ?");
@@ -254,8 +292,15 @@ void setup(void)
 
   Serial.println("HTTP server started");
 
-  initText(wwwServer.localIP().c_str(), matrix.color565(228,  0,  0));
-  strncpy(scrollColorText, "#FF0000", MAX_COLOR_SIZE);
+  if (USE_AP)
+  {
+    showAPinfo();
+  }
+  else
+  {
+    initText(wwwServer.localIP().c_str(), matrix.color565(228,  0,  0));
+    strncpy(scrollColorText, "#FF0000", MAX_COLOR_SIZE);
+  }
 }
 
 void loop()
@@ -270,7 +315,14 @@ void loop()
     Serial.println("Status: Requests: " + String(wwwServer.requestCount) + 
                    ", Free Heap: " + String(ESP.getFreeHeap()));
     Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
+    if (USE_AP)
+    {
+      Serial.println(WiFi.softAPIP());
+    }
+    else
+    {
+      Serial.println(WiFi.localIP());
+    }
   }
 
   if (mode == Modes::Text)

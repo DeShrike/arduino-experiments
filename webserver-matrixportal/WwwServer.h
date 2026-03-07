@@ -18,6 +18,7 @@ class WwwServer
 
   public:
     unsigned long requestCount = 0;
+    bool accessPoint = false;
 
     WwwServer();
     WwwServer(const WwwServer&) = delete;
@@ -29,8 +30,8 @@ class WwwServer
 
     String localIP();
     size_t contentLength();
-    
-    bool init(const char *ssid, const char *pw);
+
+    bool init(const char *ssid, const char *pw, bool useAP);
     void begin();
     void handleClient();
 

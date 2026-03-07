@@ -1,34 +1,60 @@
 #include <WiFi.h>
 #include <NetworkClient.h>
 #include <WebServer.h>
-#include <ESPmDNS.h>
+//#include <ESPmDNS.h>
+#include <DNSServer.h>
+
 #include "WwwServer.h"
+
+#define DNS_PORT 53
+
+DNSServer dnsServer;
 
 WwwServer::WwwServer() : webServer(80)
 {
 }
 
-bool WwwServer::init(const char *ssid, const char *password)
+bool WwwServer::init(const char *ssid, const char *password, bool useAP)
 {
   char ssid_[100];
   char pw_[100];
-  decode(ssid, ssid_, 100);
-  decode(password, pw_, 100);
-
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid_, pw_);
-
-  int waitCount = 0;
-  // Wait for connection
-  while (WiFi.status() != WL_CONNECTED)
+  if (useAP)
   {
-    delay(500);
-    waitCount++;
-    if (waitCount > 60)
+    strcpy(ssid_, ssid);
+    strcpy(pw_, password);
+    accessPoint = true;
+  }
+  else
+  {
+    decode(ssid, ssid_, 100);
+    decode(password, pw_, 100);
+  }
+
+  if (useAP)
+  {
+    Serial.println("AP mode");
+    WiFi.mode(WIFI_AP);
+    bool ok = WiFi.softAP(ssid_, pw_);
+    Serial.println(ok ? "AP started" : "AP failed");
+  }
+  else
+  {
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(ssid_, pw_);
+
+    int waitCount = 0;
+    // Wait for connection
+    while (WiFi.status() != WL_CONNECTED)
     {
-        return false;
+      delay(500);
+      waitCount++;
+      if (waitCount > 60)
+      {
+          return false;
+      }
     }
   }
+
 
   /*
   Serial.println("");
@@ -37,10 +63,34 @@ bool WwwServer::init(const char *ssid, const char *password)
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
   */
-  if (MDNS.begin("esp32"))
+  //if (MDNS.begin("esp32"))
   {
     //Serial.println("MDNS responder started");
   }
+
+  dnsServer.start(DNS_PORT, "*", WiFi.softAPIP());
+  dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+  dnsServer.setTTL(60);
+  //dnsServer.setVerbose(true);   // enable logging
+
+  // Android captive portal detection
+  webServer.on("/generate_204", [this]() {
+    Serial.println("/generate_204");
+    webServer.send(200, "text/plain", "");
+  });
+
+  // iOS captive portal detection
+  webServer.on("/hotspot-detect.html", [this]() {
+    Serial.println("/hotspot-detect.html");
+    webServer.sendHeader("Location", "/", true);
+    webServer.send(302, "text/plain", "");
+  });
+
+  // Windows captive portal detection
+  webServer.on("/connecttest.txt", [this]() {
+    Serial.println("/connecttest.txt");
+    webServer.send(200, "text/plain", "Microsoft Connect Test");
+  });
 
   webServer.onNotFound([this]() {
       this->handleNotFound();
@@ -62,7 +112,14 @@ void WwwServer::begin()
 
 String WwwServer::localIP()
 {
+  if (accessPoint)
+  {
+    return WiFi.softAPIP().toString();
+  }
+  else
+  {
     return WiFi.localIP().toString();
+  }
 }
 
 size_t WwwServer::contentLength()
@@ -71,13 +128,13 @@ size_t WwwServer::contentLength()
 }
 
 void WwwServer::decode(const char *encoded, char *result, size_t result_size)
-{          
+{
    char *r = result;
    const char *e = encoded;
    uint16_t ix = 0;
    while (*e) { *r++ = *e++; e += ++ix; }
    *r = 0;
-}  
+}
 
 void WwwServer::sendHtmlHeader()
 {
@@ -219,22 +276,29 @@ void WwwServer::sendHtmlFooter()
 
 void WwwServer::handleNotFound()
 {
-  String message = "File Not Found\n\n";
-  message += "URI: ";
-  message += webServer.uri();
-  message += "\nMethod: ";
-  message += (webServer.method() == HTTP_GET) ? "GET" : "POST";
-  message += "\nArguments: ";
-  message += webServer.args();
-  message += "\n";
-
-  for (uint8_t i = 0; i < webServer.args(); i++)
+  if (accessPoint)
   {
-    message += " " + webServer.argName(i) + ": " + webServer.arg(i) + "\n";
+    webServer.sendHeader("Location", String("http://") + WiFi.softAPIP().toString(), true);
+    webServer.send(302, "text/plain", "");
   }
-
-  webServer.send(404, "text/plain", message);
-
+  else
+  { 
+    String message = "File Not Found\n\n";
+    message += "URI: ";
+    message += webServer.uri();
+    message += "\nMethod: ";
+    message += (webServer.method() == HTTP_GET) ? "GET" : "POST";
+    message += "\nArguments: ";
+    message += webServer.args();
+    message += "\n";
+  
+    for (uint8_t i = 0; i < webServer.args(); i++)
+    {
+      message += " " + webServer.argName(i) + ": " + webServer.arg(i) + "\n";
+    }
+  
+    webServer.send(404, "text/plain", message);
+  }
   requestCount++;
 }
 
@@ -245,9 +309,9 @@ void WwwServer::sendStatusPage(const String& currentText, const String& currentC
     int hr = sec / 3600;
     int min = (sec / 60) % 60;
     sec = sec % 60;
-  
+
     snprintf(
-      temp, 20,  
+      temp, 20,
       "%02d:%02d:%02d",
       hr, min, sec
     );
@@ -501,6 +565,7 @@ void WwwServer::sendDrawPage()
 
 void WwwServer::handleClient()
 {
+    dnsServer.processNextRequest();
     webServer.handleClient();
 }
 
