@@ -299,8 +299,9 @@ void setup(void)
   else
   {
     initText(wwwServer.localIP().c_str(), matrix.color565(228,  0,  0));
-    strncpy(scrollColorText, "#FF0000", MAX_COLOR_SIZE);
   }
+
+  strncpy(scrollColorText, "#FF0000", MAX_COLOR_SIZE);
 }
 
 void loop()

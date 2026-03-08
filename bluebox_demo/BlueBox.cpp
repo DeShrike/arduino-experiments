@@ -10,6 +10,8 @@ const char* bluebox_color_names[] = {
    "Lime", "Green", "Emerald", "Teal", "Cyan", "Cobalt", "Indigo", "Violet", "Pink", "Magenta", "Crimson", "Red", "Orange", "Amber", "Yellow", "Brown", "Olive", "Steel", "Mauve", "Taupe", 
 };
 
+const uint8_t BLUEBOX_COLOR_COUNT = (sizeof(bluebox_colors) / sizeof(bluebox_colors[0]));
+
 BlueBox::BlueBox() : tft(TFT_CS, TFT_DC, TFT_RST)
 {}
 

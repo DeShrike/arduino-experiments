@@ -6,7 +6,8 @@
 #ifdef USE_AP
 
 const char *SSID = "Matrix";
-const char *PW = "coderdojo";
+const char *PW = "";
+//const char *PW = "coderdojo";
 
 #else
 
