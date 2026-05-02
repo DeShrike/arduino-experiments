@@ -1,0 +1,145 @@
+function getCode (c: string) {
+    if ("a" <= c && c <= "z") {
+        c = c.toUpperCase()
+    }
+    return codeset[codes.indexOf(c)]
+}
+function space () {
+    basic.pause(MEDIUM_GAP)
+}
+function play (message: string) {
+    let i: number;
+let inputLength: number;
+let currentChar: string;
+let morsecode: string;
+let codeLength: number;
+let j: number;
+i = 0
+    inputLength = message.length
+    while (i <= inputLength - 1) {
+        basic.clearScreen()
+        currentChar = message.charAt(i)
+        basic.showString(currentChar)
+        if (currentChar == " ") {
+            space()
+        } else {
+            morsecode = getCode(currentChar)
+            if (morsecode == null) {
+                continue;
+            }
+            codeLength = morsecode.length
+            j = 0
+            while (j <= codeLength - 1) {
+                if (morsecode[j] == ".") {
+                    dit()
+                } else if (morsecode[j] == "-") {
+                    dah()
+                }
+                j += 1
+            }
+            letter()
+        }
+        i += 1
+    }
+}
+function letter () {
+    basic.pause(SHORT_GAP)
+}
+function dit () {
+    pins.digitalWritePin(DigitalPin.P0, 1)
+    basic.pause(DIT_LENGTH)
+    pins.digitalWritePin(DigitalPin.P0, 0)
+    basic.pause(ELEMENT_GAP)
+}
+function dah () {
+    pins.digitalWritePin(DigitalPin.P0, 1)
+    basic.pause(DAH_LENGTH)
+    pins.digitalWritePin(DigitalPin.P0, 0)
+    basic.pause(ELEMENT_GAP)
+}
+let MEDIUM_GAP = 0
+let SHORT_GAP = 0
+let ELEMENT_GAP = 0
+let DAH_LENGTH = 0
+let DIT_LENGTH = 0
+let codeset: string[] = []
+let codes = ""
+codes = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_"
+codeset = [
+"-.-.--",
+".-..-.",
+null,
+"...-..-",
+null,
+".-...",
+".----.",
+"-.--.",
+"-.--.-",
+null,
+".-.-.",
+"--..--",
+"-....-",
+".-.-.-",
+"-..-.",
+"-----",
+".----",
+"..---",
+"...--",
+"....-",
+".....",
+"-....",
+"--...",
+"---..",
+"----.",
+"---...",
+"-.-.-.",
+null,
+"-...-",
+null,
+"..--..",
+".--.-.",
+".-",
+"-...",
+"-.-.",
+"-..",
+".",
+"..-.",
+"--.",
+"....",
+"..",
+".---",
+"-.-",
+".-..",
+"--",
+"-.",
+"---",
+".--.",
+"--.-",
+".-.",
+"...",
+"-",
+"..-",
+"...-",
+".--",
+"-..-",
+"-.--",
+"--..",
+null,
+null,
+null,
+null,
+"..--.-"
+]
+let UNIT_LENGTH = 100
+DIT_LENGTH = UNIT_LENGTH * 1
+DAH_LENGTH = UNIT_LENGTH * 3
+ELEMENT_GAP = UNIT_LENGTH * 1
+SHORT_GAP = UNIT_LENGTH * 2
+MEDIUM_GAP = UNIT_LENGTH * 4
+let Message = "Hello World "
+basic.forever(function () {
+    basic.clearScreen()
+    play(Message)
+    basic.clearScreen()
+    basic.pause(1000)
+})
